@@ -165,7 +165,9 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
