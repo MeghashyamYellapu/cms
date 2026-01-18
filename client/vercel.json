@@ -1,7 +1,51 @@
 {
+    "headers": [
+        {
+            "source": "/service-worker.js",
+            "headers": [
+                {
+                    "key": "Content-Type",
+                    "value": "application/javascript"
+                },
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, must-revalidate"
+                }
+            ]
+        },
+        {
+            "source": "/manifest.json",
+            "headers": [
+                {
+                    "key": "Content-Type",
+                    "value": "application/manifest+json"
+                }
+            ]
+        }
+    ],
     "rewrites": [
         {
-            "source": "/((?!logo.svg|manifest.json|favicon.ico|service-worker.js|static).*)",
+            "source": "/service-worker.js",
+            "destination": "/service-worker.js"
+        },
+        {
+            "source": "/manifest.json",
+            "destination": "/manifest.json"
+        },
+        {
+            "source": "/logo.svg",
+            "destination": "/logo.svg"
+        },
+        {
+            "source": "/icon-192.png",
+            "destination": "/icon-192.png"
+        },
+        {
+            "source": "/icon-512.png",
+            "destination": "/icon-512.png"
+        },
+        {
+            "source": "/((?!static|.*\\..*).*)",
             "destination": "/index.html"
         }
     ]
