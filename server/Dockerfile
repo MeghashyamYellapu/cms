@@ -1,26 +1,7 @@
-FROM node:18-slim
+FROM ghcr.io/puppeteer/puppeteer:21.6.0
 
-# Install required system dependencies for Puppeteer
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    ca-certificates \
-    procps \
-    libxss1 \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libgtk-3-0 \
-    libnss3 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxi6 \
-    libxtst6 \
-    fonts-liberation \
-    libappindicator3-1 \
-    libgbm1 \
-    && rm -rf /var/lib/apt/lists/*
+# Switch to root to install app dependencies and setup permissions
+USER root
 
 WORKDIR /app
 
@@ -28,13 +9,18 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
+# We skip chromium download because the base image already has a compatible version
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+
 RUN npm install
 
 # Copy application code
 COPY . .
 
-# Create directories for runtime files
-RUN mkdir -p uploads receipts
+# Create necessary directories and ensure write permissions
+RUN mkdir -p uploads receipts && \
+    chmod -R 777 uploads receipts
 
 # Expose the port
 EXPOSE 5000
