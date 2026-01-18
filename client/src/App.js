@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import Sidebar from './components/Sidebar';
+import InstallPrompt from './components/InstallPrompt';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
@@ -19,6 +20,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-50">
+          <InstallPrompt />
           <Toaster
             position="top-right"
             toastOptions={{
