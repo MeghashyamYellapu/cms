@@ -4,7 +4,6 @@ const CryptoJS = require('crypto-js');
 const customerSchema = new mongoose.Schema({
   customerId: {
     type: String,
-    unique: true,
     trim: true
   },
   name: {
@@ -15,7 +14,6 @@ const customerSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
     required: [true, 'Phone number is required'],
-    unique: true,
     trim: true,
     match: [/^[6-9]\d{9}$/, 'Please provide a valid 10-digit phone number']
   },
@@ -102,10 +100,14 @@ const customerSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Compound indexes for isolation
+customerSchema.index({ customerId: 1, createdBy: 1 }, { unique: true });
+customerSchema.index({ phoneNumber: 1, createdBy: 1 }, { unique: true });
+
 // Auto-generate customerId before saving
 customerSchema.pre('save', async function(next) {
   if (!this.customerId || this.customerId === '') {
-    const count = await mongoose.model('Customer').countDocuments();
+    const count = await mongoose.model('Customer').countDocuments({ createdBy: this.createdBy });
     this.customerId = `CUST${String(count + 1).padStart(6, '0')}`;
   }
   

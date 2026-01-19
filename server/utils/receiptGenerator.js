@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const Settings = require('../models/Settings');
+const Admin = require('../models/Admin');
 
 // Ensure receipts directory exists
 const receiptsDir = path.join(__dirname, '../receipts');
@@ -15,9 +16,64 @@ if (!fs.existsSync(receiptsDir)) {
  */
 exports.generateReceipt = async (payment) => {
   try {
-    // Get settings from database
+    // Get global settings (fallback)
     const settings = await Settings.getSettings();
     
+    // Determine Company Info Strategy
+    // Priority: 1. Collector's own details → 2. Collector's Parent (SuperAdmin) → 3. SuperAdmin on payment → 4. Global Settings
+    let companyInfo = {
+        name: settings.companyName,
+        address: settings.companyAddress,
+        phone: settings.companyPhone,
+        email: settings.companyEmail,
+        footer: settings.receiptFooter
+    };
+
+    // Helper to check admin chain for company details
+    const findCompanyDetails = async (adminId) => {
+        if (!adminId) return null;
+        const admin = await Admin.findById(adminId);
+        if (!admin) return null;
+        
+        // Check this admin's own details
+        if (admin.companyDetails && admin.companyDetails.name) {
+            return admin.companyDetails;
+        }
+        
+        // Check parent if exists
+        if (admin.parentId) {
+            const parent = await Admin.findById(admin.parentId);
+            if (parent && parent.companyDetails && parent.companyDetails.name) {
+                return parent.companyDetails;
+            }
+        }
+        
+        return null;
+    };
+
+    // 1. Check Collector (The Admin who took payment)
+    let foundDetails = null;
+    if (payment.collectedBy) {
+        const collectorId = payment.collectedBy._id || payment.collectedBy;
+        foundDetails = await findCompanyDetails(collectorId);
+    }
+
+    // 2. If no collector details, Check SuperAdmin on payment
+    if (!foundDetails && payment.superAdminId) {
+        foundDetails = await findCompanyDetails(payment.superAdminId);
+    }
+
+    // Apply found details
+    if (foundDetails) {
+        companyInfo = {
+            name: foundDetails.name,
+            address: foundDetails.address || '',
+            phone: foundDetails.phone || '',
+            email: foundDetails.email || '',
+            footer: foundDetails.footer || settings.receiptFooter
+        };
+    }
+
     const customer = payment.customerId;
     const bill = payment.billId;
     
@@ -251,8 +307,8 @@ exports.generateReceipt = async (payment) => {
   <div class="receipt">
     <div class="header">
       <div class="receipt-title">PAYMENT RECEIPT</div>
-      <div class="company-name">${settings.companyName}</div>
-      <div class="company-contact">Contact ${settings.companyPhone}</div>
+      <div class="company-name">${companyInfo.name}</div>
+      <div class="company-contact">${companyInfo.address ? companyInfo.address + ' | ' : ''}Ofc: ${companyInfo.phone}</div>
     </div>
     
     <div class="info-section">
@@ -307,7 +363,7 @@ exports.generateReceipt = async (payment) => {
     
     <div class="footer">
       <div class="footer-text">
-        ${settings.receiptFooter}
+        ${companyInfo.footer}
       </div>
       <div class="collected-by">Collected by: ${payment.collectedBy.name}</div>
       <div class="audit-badge">AUTHENTIC RECEIPT DIGITAL AUDIT LOG</div>

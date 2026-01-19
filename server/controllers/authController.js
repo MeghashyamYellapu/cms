@@ -72,7 +72,9 @@ exports.login = async (req, res) => {
           name: admin.name,
           email: admin.email,
           role: admin.role,
-          status: admin.status
+          status: admin.status,
+          companyDetails: admin.companyDetails,
+          parentId: admin.parentId // Include parentId as well for context
         },
         token
       }
@@ -94,9 +96,15 @@ exports.getMe = async (req, res) => {
   try {
     const admin = await Admin.findById(req.admin._id);
 
+    // Ensure companyDetails is present (even if empty) for consistency
+    const adminData = admin.toObject();
+    if (!adminData.companyDetails) {
+        adminData.companyDetails = {};
+    }
+
     res.status(200).json({
       success: true,
-      data: admin
+      data: adminData
     });
   } catch (error) {
     console.error('Get me error:', error);

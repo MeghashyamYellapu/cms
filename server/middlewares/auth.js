@@ -46,9 +46,9 @@ exports.protect = async (req, res, next) => {
     } else if (req.admin.role === 'SuperAdmin') {
        req.superAdminId = req.admin._id;
     } else if (req.admin.role === 'Admin') {
-       // Ideally Admin should have parentId. Use it.
-       // If no parentId (legacy), we might fall back or restrict.
-       req.superAdminId = req.admin.parentId; 
+       // If Admin has no parent (e.g. created by WebsiteAdmin or legacy), isolate to self
+       // This prevents "undefined" which leads to Global Access in filters
+       req.superAdminId = req.admin.parentId || req.admin._id; 
     }
 
     next();

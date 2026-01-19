@@ -68,13 +68,17 @@ const paymentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Auto-generate receipt ID before saving
+// Auto-generate receipt ID before saving (Scoped to Admin)
 paymentSchema.pre('save', async function(next) {
   if (!this.receiptId || this.receiptId === '') {
-    const count = await mongoose.model('Payment').countDocuments();
+    // Count only payments by this same collector for scoped numbering
+    const count = await mongoose.model('Payment').countDocuments({ 
+      collectedBy: this.collectedBy 
+    });
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
+    // Format: RCP[YY][MM]-[sequence] - unique per admin
     this.receiptId = `RCP${year}${month}${String(count + 1).padStart(6, '0')}`;
   }
   next();

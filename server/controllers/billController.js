@@ -2,14 +2,27 @@ const Bill = require('../models/Bill');
 const Customer = require('../models/Customer');
 const { logAudit } = require('../middlewares/auditLog');
 
-// Helper to add isolation filter
+// Helper to add isolation filter for BILLS
 const getIsolationFilter = (req) => {
   const filter = {};
-  if (req.superAdminId) {
-    filter.superAdminId = req.superAdminId;
+  if (req.admin.role === 'Admin') {
+     filter.generatedBy = req.admin._id;
+  } else if (req.admin.role === 'SuperAdmin') {
+     filter.superAdminId = req.admin._id;
   }
   return filter;
 };
+
+// Helper to filter customers during generation
+const getCustomerIsolationFilter = (req) => {
+  const filter = {};
+  if (req.admin.role === 'Admin') {
+     filter.createdBy = req.admin._id;
+  } else if (req.admin.role === 'SuperAdmin') {
+     filter.superAdminId = req.admin._id;
+  }
+  return filter;
+}
 
 // @desc    Generate monthly bills
 // @route   POST /api/bills/generate
@@ -25,9 +38,10 @@ exports.generateMonthlyBills = async (req, res) => {
       });
     }
 
-    // Get all active customers FOR THIS SuperAdmin
-    const customerQuery = { status: 'Active', ...getIsolationFilter(req) };
+    // Get all active customers FOR THIS SuperAdmin/Admin
+    const customerQuery = { status: 'Active', ...getCustomerIsolationFilter(req) };
     const customers = await Customer.find(customerQuery);
+
 
     const results = {
       success: [],

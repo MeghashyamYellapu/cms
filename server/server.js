@@ -56,6 +56,7 @@ app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/bills', require('./routes/billRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
+app.use('/api/portal', require('./routes/portal')); // Public customer portal
 
 // Health check
 app.get('/api/health', (req, res) => {

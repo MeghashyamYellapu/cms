@@ -42,6 +42,14 @@ const adminSchema = new mongoose.Schema({
   },
   lastLogin: {
     type: Date
+  },
+  companyDetails: {
+    name: { type: String, trim: true },
+    address: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    email: { type: String, trim: true },
+    gst: { type: String, trim: true },
+    footer: { type: String, trim: true, default: 'Thank you for your business!' }
   }
 }, {
   timestamps: true

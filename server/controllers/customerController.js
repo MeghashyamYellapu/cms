@@ -7,9 +7,16 @@ const fs = require('fs');
 // Helper to add isolation filter
 const getIsolationFilter = (req) => {
   const filter = {};
-  if (req.superAdminId) {
-    filter.superAdminId = req.superAdminId;
+  
+  // Strict isolation for standard Admins
+  if (req.admin.role === 'Admin') {
+      filter.createdBy = req.admin._id;
+  } 
+  // SuperAdmins see everyone under their umbrella
+  else if (req.admin.role === 'SuperAdmin') {
+      filter.superAdminId = req.admin._id;
   }
+  
   return filter;
 };
 
@@ -364,12 +371,11 @@ exports.bulkUpload = async (req, res) => {
           continue;
         }
 
-        // Check duplicate phone - GLOBALLY? or Scoped?
-        // Ideally Scoped, but phone is phone. Let's check Global for now to prevent confusion.
-        // Actually, if we want separate lists, we should check scoped.
-        // But schema enforces unique phoneNumber globally? I need to check schema.
-        // Assuming global unique for now.
-        const existingCustomer = await Customer.findOne({ phoneNumber: row.phoneNumber });
+        // Check duplicate phone - SCOPED to this Admin
+        const existingCustomer = await Customer.findOne({ 
+            phoneNumber: row.phoneNumber,
+            createdBy: req.admin._id 
+        });
         if (existingCustomer) {
            results.errors.push({ row: rowNumber, data: rowRaw, errors: ['Phone number already exists'] });
            continue;

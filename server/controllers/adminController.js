@@ -67,7 +67,8 @@ exports.createAdmin = async (req, res) => {
       email,
       password,
       role: newRole,
-      status: 'Active'
+      status: 'Active',
+      companyDetails: req.body.companyDetails || {}
     };
 
     // If Creator is SuperAdmin, they become the parent of the new Admin
@@ -148,6 +149,25 @@ exports.updateAdmin = async (req, res) => {
     if (email) admin.email = email;
     if (role) admin.role = role;
     if (status) admin.status = status;
+    
+    // Update company details
+    if (req.body.companyDetails) {
+      if (!admin.companyDetails) {
+          admin.companyDetails = {
+              name: '', address: '', phone: '', email: '', gst: '', footer: 'Thank you for your business!'
+          };
+      }
+      const newDetails = req.body.companyDetails;
+      
+      admin.companyDetails.name = newDetails.name !== undefined ? newDetails.name : admin.companyDetails.name;
+      admin.companyDetails.address = newDetails.address !== undefined ? newDetails.address : admin.companyDetails.address;
+      admin.companyDetails.phone = newDetails.phone !== undefined ? newDetails.phone : admin.companyDetails.phone;
+      admin.companyDetails.email = newDetails.email !== undefined ? newDetails.email : admin.companyDetails.email;
+      admin.companyDetails.footer = newDetails.footer !== undefined ? newDetails.footer : admin.companyDetails.footer;
+      
+      // Explicitly mark as modified for mixed/nested types if needed
+      admin.markModified('companyDetails');
+    }
 
     await admin.save();
 

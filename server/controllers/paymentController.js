@@ -5,11 +5,13 @@ const { logAudit } = require('../middlewares/auditLog');
 const { generateReceipt } = require('../utils/receiptGenerator');
 const { sendWhatsAppReceipt } = require('../utils/whatsappService');
 
-// Helper to add isolation filter
+// Helper to add isolation filter for PAYMENTS
 const getIsolationFilter = (req) => {
   const filter = {};
-  if (req.superAdminId) {
-    filter.superAdminId = req.superAdminId;
+  if (req.admin.role === 'Admin') {
+     filter.collectedBy = req.admin._id;
+  } else if (req.admin.role === 'SuperAdmin') {
+     filter.superAdminId = req.admin._id;
   }
   return filter;
 };
@@ -36,11 +38,15 @@ exports.recordPayment = async (req, res) => {
       });
     }
 
-    // Get customer using isolation filter
-    const customer = await Customer.findOne({ 
-        _id: customerId, 
-        ...getIsolationFilter(req) 
-    });
+    // Get customer using isolation filter (Manual logic as Customer != Payment)
+    const customerQuery = { _id: customerId };
+    if (req.admin.role === 'Admin') {
+       customerQuery.createdBy = req.admin._id;
+    } else if (req.admin.role === 'SuperAdmin') {
+       customerQuery.superAdminId = req.admin._id;
+    }
+
+    const customer = await Customer.findOne(customerQuery);
 
     const bill = await Bill.findById(billId);
 
