@@ -33,6 +33,7 @@ const Customers = () => {
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [uploadResult, setUploadResult] = useState(null);
   const [showUploadResultModal, setShowUploadResultModal] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -153,6 +154,7 @@ const Customers = () => {
     const formData = new FormData();
     formData.append('file', file);
 
+    setUploadingFile(true);
     try {
       const response = await customerAPI.bulkUpload(formData);
       setUploadResult(response.data.data);
@@ -162,6 +164,8 @@ const Customers = () => {
       e.target.value = null; // Reset input
     } catch (error) {
       toast.error(error.response?.data?.message || 'Upload failed');
+    } finally {
+      setUploadingFile(false);
     }
   };
 
@@ -343,9 +347,9 @@ const Customers = () => {
 
       {/* Add/Edit Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b flex items-center justify-between sticky top-0 bg-white">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
+          <div className="bg-white rounded-none md:rounded-xl max-w-2xl w-full h-full md:h-auto md:max-h-[90vh] overflow-y-auto flex flex-col md:block">
+            <div className="p-6 border-b flex items-center justify-between sticky top-0 bg-white z-10">
               <h2 className="text-2xl font-bold">
                 {selectedCustomer ? 'Edit Customer' : 'Add New Customer'}
               </h2>
@@ -361,7 +365,7 @@ const Customers = () => {
               </button>
             </div>
 
-            <form onSubmit={formik.handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={formik.handleSubmit} className="p-6 space-y-4 flex-1 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -517,13 +521,13 @@ const Customers = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4 pb-4 md:pb-0">
                 <button
                   type="submit"
-                  className="btn btn-primary flex-1"
+                  className={`btn btn-primary flex-1 ${formik.isSubmitting ? 'btn-loading' : ''}`}
                   disabled={formik.isSubmitting}
                 >
-                  {formik.isSubmitting ? 'Saving...' : (selectedCustomer ? 'Update Customer' : 'Add Customer')}
+                  <span>{formik.isSubmitting ? 'Saving...' : (selectedCustomer ? 'Update Customer' : 'Add Customer')}</span>
                 </button>
                 <button
                   type="button"
@@ -544,8 +548,8 @@ const Customers = () => {
 
       {/* Bulk Upload Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
+          <div className="bg-white rounded-none md:rounded-xl max-w-md w-full h-full md:h-auto p-6 flex flex-col justify-center">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">Bulk Upload Customers</h2>
               <button
@@ -563,14 +567,15 @@ const Customers = () => {
 
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <Upload className="mx-auto mb-4 text-gray-400" size={48} />
-                <label className="btn btn-primary cursor-pointer">
+                <label className={`btn btn-primary cursor-pointer ${uploadingFile ? 'btn-loading' : ''}`}>
                   <input
                     type="file"
                     className="hidden"
                     accept=".xlsx,.xls,.csv"
                     onChange={handleBulkUpload}
+                    disabled={uploadingFile}
                   />
-                  Choose File
+                  <span>{uploadingFile ? 'Uploading...' : 'Choose File'}</span>
                 </label>
                 <p className="text-sm text-gray-500 mt-2">
                   Supported formats: .xlsx, .xls, .csv
@@ -602,9 +607,9 @@ const Customers = () => {
 
       {/* Upload Result Modal */}
       {showUploadResultModal && uploadResult && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b flex items-center justify-between bg-white rounded-t-xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
+          <div className="bg-white rounded-none md:rounded-xl max-w-3xl w-full h-full md:h-auto md:max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b flex items-center justify-between bg-white md:rounded-t-xl">
               <h2 className="text-2xl font-bold">Upload Results</h2>
               <button
                 onClick={() => setShowUploadResultModal(false)}
@@ -659,7 +664,7 @@ const Customers = () => {
               )}
             </div>
 
-            <div className="p-6 border-t bg-gray-50 rounded-b-xl flex justify-end">
+            <div className="p-6 border-t bg-gray-50 md:rounded-b-xl flex justify-end">
               <button 
                 onClick={() => setShowUploadResultModal(false)}
                 className="btn btn-primary"

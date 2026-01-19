@@ -113,29 +113,9 @@ const Payments = () => {
 
     const message = `Payment Receipt for ${payment.receiptId}\nAmount: ₹${payment.paidAmount}`;
 
-    // METHOD 1: Native Web Share API (Works on Mobile Chrome/Safari)
-    // This allows sharing the IMAGE file directly to WhatsApp App
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          files: [file],
-          title: 'Payment Receipt',
-          text: message
-        });
-        toast.success('Opened WhatsApp!');
-        return; 
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.log('Native share failed, using fallback...');
-        } else {
-          return; // User cancelled
-        }
-      }
-    }
-
-    // METHOD 2: Desktop / Fallback
-    // WhatsApp Web URL does NOT support file attachment automatically.
-    // So we: 1. Download image, 2. Open Chat, 3. User attaches it.
+    // METHOD: Direct WhatsApp Link (Targets specific number)
+    // Note: We cannot programmatically attach the file to the WhatsApp chat via URL.
+    // So we: 1. Download the image, 2. Open the specific Chat, 3. User attaches the downloaded image.
     
     // 1. Download the image
     const url = URL.createObjectURL(file);
@@ -146,13 +126,18 @@ const Payments = () => {
     link.click();
     document.body.removeChild(link);
     
-    // 2. Open WhatsApp Chat
-    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+    // 2. Open WhatsApp Chat directly to the customer number
+    // Use whatsapp:// protocol for better mobile experience if possible, fallback to web
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const whatsappUrl = isMobile 
+        ? `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`
+        : `https://web.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+        
     window.open(whatsappUrl, '_blank');
     
     toast('Image downloaded! Please attach it to the WhatsApp chat.', {
       icon: '📎',
-      duration: 6000
+      duration: 5000
     });
   };
 
@@ -227,11 +212,17 @@ const Payments = () => {
     
     // Reset payment related fields
     formik.setFieldValue('billId', '');
-    setTotalOutstanding(0);
     
     // Find basic info from list first
     const listCustomer = customers.find(c => c._id === customerId);
     setSelectedCustomer(listCustomer);
+
+    // Set initial balance from list data to avoid "0" flash
+    if (listCustomer) {
+        setTotalOutstanding(listCustomer.previousBalance || 0);
+    } else {
+        setTotalOutstanding(0);
+    }
 
     if (customerId) {
         try {
@@ -252,8 +243,8 @@ const Payments = () => {
                 const latestBill = sortedBills[0];
                 formik.setFieldValue('billId', latestBill._id);
                 
-                // Note: We use customer.previousBalance as the authority on total outstanding,
-                // not the bill's remaining balance, as previousBalance includes arrears.
+                // Use the latest bill's remaining balance as the most accurate outstanding amount
+                setTotalOutstanding(latestBill.remainingBalance);
             }
         } catch (error) {
             console.error('Error fetching customer details:', error);
@@ -332,7 +323,6 @@ const Payments = () => {
                   <th>Remaining</th>
                   <th>Mode</th>
                   <th>Date</th>
-                  <th>WhatsApp</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -348,37 +338,31 @@ const Payments = () => {
                     </td>
                     <td>{payment.billId?.month} {payment.billId?.year}</td>
                     <td className="text-green-600 font-medium">₹{payment.paidAmount}</td>
-                    <td className={payment.remainingBalance > 0 ? 'text-red-600' : 'text-green-600'}>
-                      ₹{payment.remainingBalance}
+                    <td className={`font-medium ${payment.remainingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {payment.remainingBalance < 0 
+                        ? `Advance: ₹${Math.abs(payment.remainingBalance)}` 
+                        : `₹${payment.remainingBalance}`
+                      }
                     </td>
                     <td>
                       <span className="badge badge-info">{payment.paymentMode}</span>
                     </td>
                     <td>{new Date(payment.paymentDate).toLocaleDateString('en-IN')}</td>
                     <td>
-                      <span className={`badge ${
-                        payment.whatsappStatus === 'Sent' ? 'badge-success' :
-                        payment.whatsappStatus === 'Failed' ? 'badge-danger' :
-                        'badge-warning'
-                      }`}>
-                        {payment.whatsappStatus}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="flex gap-2">
+                      <div className="flex gap-4">
                         <button
                           onClick={() => handleReceiptAction(payment, 'download')}
-                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1 p-1"
                           title="Download Receipt"
                         >
-                          <Download size={16} />
+                          <Download size={22} />
                         </button>
                         <button
                           onClick={() => handleReceiptAction(payment, 'share')}
-                          className="text-green-600 hover:text-green-800 flex items-center gap-1"
+                          className="text-green-600 hover:text-green-800 flex items-center gap-1 p-1"
                           title="Share to WhatsApp"
                         >
-                          <Send size={16} />
+                          <Send size={22} />
                         </button>
                       </div>
                     </td>
@@ -392,8 +376,8 @@ const Payments = () => {
 
       {/* Add Payment Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
+          <div className="bg-white rounded-none md:rounded-xl max-w-2xl w-full h-full md:h-auto overflow-y-auto p-6">
             <h2 className="text-2xl font-bold mb-4">Record Payment</h2>
             
             <form onSubmit={formik.handleSubmit} className="space-y-4">
@@ -438,9 +422,18 @@ const Payments = () => {
                             }}
                           >
                             <p className="font-medium text-gray-900">{customer.name}</p>
-                            <div className="flex justify-between text-xs text-gray-500">
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
                                <span>ID: {customer.customerId}</span>
                                <span>Ph: {customer.phoneNumber}</span>
+                            </div>
+                            <div className="text-xs mt-1 text-right">
+                                {customer.previousBalance < 0 ? (
+                                    <span className="text-green-600 font-medium">Advance: ₹{Math.abs(customer.previousBalance)}</span>
+                                ) : customer.previousBalance > 0 ? (
+                                    <span className="text-red-600 font-medium">Due: ₹{customer.previousBalance}</span>
+                                ) : (
+                                    <span className="text-gray-500">No Dues</span>
+                                )}
                             </div>
                           </div>
                         ))}
@@ -458,13 +451,13 @@ const Payments = () => {
               {selectedCustomer && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                   <div className="flex justify-between items-center">
-                     <span className="text-gray-700 font-medium">Total Outstanding Amount:</span>
+                     <span className="text-gray-700 font-medium">Current Balance:</span>
                      <span className={`text-xl font-bold ${totalOutstanding > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                       ₹{totalOutstanding}
+                       {totalOutstanding < 0 ? `Advance: ₹${Math.abs(totalOutstanding)}` : `₹${totalOutstanding}`}
                      </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Payment will be applied to the latest bill period.
+                    Balance before this payment.
                   </p>
                 </div>
               )}
@@ -483,6 +476,25 @@ const Payments = () => {
                     placeholder="0"
                     {...formik.getFieldProps('paidAmount')}
                   />
+                  {formik.values.paidAmount !== '' && (
+                    <div className="mt-2 p-2 bg-gray-50 rounded border border-gray-100">
+                         {(() => {
+                            const paid = Number(formik.values.paidAmount);
+                            const newBalance = totalOutstanding - paid;
+                            return newBalance < 0 ? (
+                                <div className="flex justify-between items-center text-green-700">
+                                    <span className="text-sm font-medium">Projected Advance:</span>
+                                    <span className="font-bold">₹{Math.abs(newBalance)}</span>
+                                </div>
+                            ) : (
+                                <div className="flex justify-between items-center text-gray-700">
+                                    <span className="text-sm font-medium">Remaining Due:</span>
+                                    <span className="font-bold">₹{Math.max(0, newBalance)}</span>
+                                </div>
+                            );
+                         })()}
+                    </div>
+                  )}
                   {formik.touched.paidAmount && formik.errors.paidAmount && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.paidAmount}</p>
                   )}
@@ -525,13 +537,13 @@ const Payments = () => {
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4 pb-4 md:pb-0">
                 <button
                   type="submit"
-                  className="btn btn-primary flex-1"
+                  className={`btn btn-primary flex-1 ${formik.isSubmitting ? 'btn-loading' : ''}`}
                   disabled={formik.isSubmitting}
                 >
-                  {formik.isSubmitting ? 'Recording...' : 'Record Payment'}
+                  <span>{formik.isSubmitting ? 'Recording...' : 'Record Payment'}</span>
                 </button>
                 <button
                   type="button"

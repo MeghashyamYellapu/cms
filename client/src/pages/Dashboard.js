@@ -129,7 +129,7 @@ const Dashboard = () => {
               Dashboard
             </h1>
             <p className="text-gray-500 mt-2 text-lg">
-              Welcome back, <span className="font-semibold text-gray-800">{admin?.name}</span>! Here's what's happening today.
+              Welcome back, <span className="font-semibold text-gray-800">{admin?.companyDetails?.name || admin?.name}</span>! Here's what's happening today.
             </p>
           </div>
           <div className="flex gap-3">

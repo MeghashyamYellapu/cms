@@ -141,13 +141,13 @@ const Login = () => {
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          {/* <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</p>
             <p className="text-xs text-blue-700">
               Email: admin@cableoperator.com<br />
               Password: Admin@123
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* Footer */}

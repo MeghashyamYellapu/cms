@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   X,
+  Shield,
   User
 } from 'lucide-react';
 
@@ -27,14 +28,23 @@ const Sidebar = () => {
     }
   }, [location]);
 
-  const menuItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/customers', icon: Users, label: 'Customers' },
-    { path: '/bills', icon: FileText, label: 'Bills' },
-    { path: '/payments', icon: CreditCard, label: 'Payments' },
-    { path: '/reports', icon: BarChart3, label: 'Reports' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
-  ];
+  // Define menu items based on role
+  const isSuperOrWebsiteAdmin = ['SuperAdmin', 'WebsiteAdmin'].includes(admin?.role);
+
+  const menuItems = isSuperOrWebsiteAdmin 
+    ? [
+        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/admins', icon: Shield, label: 'Admins' },
+        { path: '/settings', icon: Settings, label: 'Settings' },
+      ]
+    : [
+        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/customers', icon: Users, label: 'Customers' },
+        { path: '/bills', icon: FileText, label: 'Bills' },
+        { path: '/payments', icon: CreditCard, label: 'Payments' },
+        { path: '/reports', icon: BarChart3, label: 'Reports' },
+        { path: '/settings', icon: Settings, label: 'Settings' },
+      ];
 
   const handleLogout = async () => {
     await logout();

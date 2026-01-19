@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Icon Generator - Cable CMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #4f46e5;
+        }
+
+        .icon-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .icon-item {
+            text-align: center;
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-item img {
+            display: block;
+            margin: 0 auto 8px;
+        }
+
+        .icon-item span {
+            font-size: 12px;
+            color: #666;
+        }
+
+        button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #4338ca;
+        }
+
+        .instructions {
+            background: #e0e7ff;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Cable CMS Icon Generator</h1>
+
+        <div class="instructions">
+            <strong>Instructions:</strong>
+            <ol>
+                <li>Open this file in Chrome/Firefox browser</li>
+                <li>Click "Generate All Icons" button</li>
+                <li>Each icon will be downloaded automatically</li>
+                <li>Move the downloaded icons to the <code>public/icons/</code> folder</li>
+            </ol>
+        </div>
+
+        <button onclick="generateAllIcons()">Generate All Icons</button>
+
+        <div class="icon-preview" id="preview"></div>
+    </div>
+
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+        // SVG content for the icon
+        const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <defs>
+            <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#4f46e5"/>
+              <stop offset="100%" style="stop-color:#7c3aed"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" rx="96" fill="url(#bg-gradient)"/>
+          <g fill="white">
+            <rect x="116" y="120" width="280" height="200" rx="16" fill="none" stroke="white" stroke-width="20"/>
+            <line x1="200" y1="120" x2="160" y2="60" stroke="white" stroke-width="16" stroke-linecap="round"/>
+            <line x1="312" y1="120" x2="352" y2="60" stroke="white" stroke-width="16" stroke-linecap="round"/>
+            <circle cx="160" cy="60" r="12" fill="white"/>
+            <circle cx="352" cy="60" r="12" fill="white"/>
+            <text x="256" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="white">₹</text>
+            <rect x="206" y="320" width="100" height="20" rx="4" fill="white"/>
+            <rect x="176" y="340" width="160" height="20" rx="4" fill="white"/>
+            <path d="M 396 220 Q 440 220 440 280 Q 440 380 360 400 L 340 400" fill="none" stroke="white" stroke-width="12" stroke-linecap="round"/>
+            <circle cx="340" cy="400" r="16" fill="white"/>
+          </g>
+          <text x="256" y="460" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" opacity="0.9">CMS</text>
+        </svg>`;
+
+        function generateIcon(size) {
+            return new Promise((resolve) => {
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = size;
+                canvas.height = size;
+
+                const img = new Image();
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+
+                img.onload = () => {
+                    ctx.clearRect(0, 0, size, size);
+                    ctx.drawImage(img, 0, 0, size, size);
+                    URL.revokeObjectURL(url);
+
+                    canvas.toBlob((blob) => {
+                        resolve({ size, blob });
+                    }, 'image/png');
+                };
+
+                img.src = url;
+            });
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function generateAllIcons() {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '<p>Generating icons...</p>';
+
+            for (const size of sizes) {
+                const { blob } = await generateIcon(size);
+                const filename = `icon-${size}x${size}.png`;
+
+                // Download
+                downloadBlob(blob, filename);
+
+                // Show preview
+                const url = URL.createObjectURL(blob);
+                const div = document.createElement('div');
+                div.className = 'icon-item';
+                div.innerHTML = `<img src="${url}" width="${Math.min(size, 96)}" height="${Math.min(size, 96)}"><span>${size}x${size}</span>`;
+                preview.appendChild(div);
+
+                // Small delay between downloads
+                await new Promise(r => setTimeout(r, 200));
+            }
+
+            preview.innerHTML = '<p style="color: green; font-weight: bold;">✅ All icons generated! Move them to public/icons/ folder.</p>' + preview.innerHTML;
+        }
+    </script>
+</body>
+
+</html>

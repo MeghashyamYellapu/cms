@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, settingsAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { Settings as SettingsIcon, User, Bell, Shield, Database, Trash2, Edit, Plus, X } from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Shield, Database, Trash2, Edit, Plus, X, BellRing, BellOff } from 'lucide-react';
+import { isPushSupported, getNotificationPermission, requestNotificationPermission, showLocalNotification } from '../utils/pwa';
 
 const Settings = () => {
   const { admin } = useAuth();
@@ -29,11 +30,18 @@ const Settings = () => {
     status: 'Active'
   });
 
+  // Notification state
+  const [notificationPermission, setNotificationPermission] = useState('default');
+  const [pushSupported, setPushSupported] = useState(false);
+
   useEffect(() => {
     fetchSettings();
     if (admin?.role !== 'Admin') {
       fetchAdmins();
     }
+    // Check notification support
+    setPushSupported(isPushSupported());
+    setNotificationPermission(getNotificationPermission());
   }, [admin]);
 
   const fetchSettings = async () => {
@@ -138,6 +146,38 @@ const Settings = () => {
     setAdminForm({ name: '', email: '', password: '', role: 'Admin', status: 'Active' });
   };
 
+  // Handle notification permission toggle
+  const handleNotificationToggle = async () => {
+    if (notificationPermission === 'granted') {
+      toast.error('To disable notifications, please change settings in your browser');
+      return;
+    }
+    
+    const granted = await requestNotificationPermission();
+    if (granted) {
+      setNotificationPermission('granted');
+      toast.success('Notifications enabled!');
+      // Send test notification
+      await showLocalNotification('Notifications Enabled', {
+        body: 'You will now receive payment reminders and updates.',
+        tag: 'welcome'
+      });
+    } else {
+      setNotificationPermission(getNotificationPermission());
+      toast.error('Notification permission denied');
+    }
+  };
+
+  const testNotification = async () => {
+    const sent = await showLocalNotification('Test Notification', {
+      body: 'This is a test notification from Cable CMS.',
+      tag: 'test'
+    });
+    if (sent) {
+      toast.success('Test notification sent!');
+    }
+  };
+
   const canManageAdmins = ['WebsiteAdmin', 'SuperAdmin'].includes(admin?.role);
 
   return (
@@ -149,7 +189,7 @@ const Settings = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Profile Settings */}
-        <div className="card">
+        <div className="card md:col-span-2">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <User className="text-blue-600" size={24} />
@@ -159,15 +199,14 @@ const Settings = () => {
               <p className="text-sm text-gray-600">Manage your account</p>
             </div>
           </div>
-          <div className="space-y-3">
-             {/* ... existing profile ... */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
              <div>
                <p className="text-sm text-gray-600">Name</p>
-               <p className="font-medium">{admin?.name}</p>
+               <p className="font-medium text-lg">{admin?.name}</p>
              </div>
              <div>
                <p className="text-sm text-gray-600">Email</p>
-               <p className="font-medium">{admin?.email}</p>
+               <p className="font-medium text-lg">{admin?.email}</p>
              </div>
              <div>
                <p className="text-sm text-gray-600">Role</p>
@@ -175,70 +214,6 @@ const Settings = () => {
              </div>
           </div>
         </div>
-
-        {/* Admin Management (Only for privileged users) */}
-        {canManageAdmins && (
-          <div className="card md:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Shield className="text-purple-600" size={24} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Admin Management</h3>
-                  <p className="text-sm text-gray-600">Create and manage access</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => { resetAdminForm(); setShowAdminModal(true); }}
-                className="btn btn-primary flex items-center gap-2"
-              >
-                <Plus size={18} /> New Admin
-              </button>
-            </div>
-
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {admins.map(adm => (
-                    <tr key={adm._id}>
-                      <td>{adm.name}</td>
-                      <td>{adm.email}</td>
-                      <td>
-                        <span className={`badge ${adm.role === 'WebsiteAdmin' ? 'badge-warning' : adm.role === 'SuperAdmin' ? 'badge-primary' : 'badge-secondary'}`}>
-                          {adm.role}
-                        </span>
-                      </td>
-                      <td><span className={`badge ${adm.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>{adm.status}</span></td>
-                      <td>
-                        {/* Logic to show buttons based on hierarchy */}
-                        {admin.role === 'WebsiteAdmin' || (admin.role === 'SuperAdmin' && adm.role === 'Admin') ? (
-                          <div className="flex gap-2">
-                             <button onClick={() => handleEditAdmin(adm)} className="text-blue-600"><Edit size={16}/></button>
-                             {adm._id !== admin._id && (
-                               <button onClick={() => handleDeleteAdmin(adm._id)} className="text-red-600"><Trash2 size={16}/></button>
-                             )}
-                          </div>
-                        ) : <span className="text-gray-400 text-xs">No Access</span>}
-                      </td>
-                    </tr>
-                  ))}
-                  {admins.length === 0 && <tr><td colSpan="5" className="text-center py-4">No other admins found</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
       </div>
 
       {/* Legacy Sections (Company Info etc) */}
@@ -254,7 +229,7 @@ const Settings = () => {
               className="input" 
               value={settings.companyName}
               onChange={handleInputChange}
-              disabled={admin?.role !== 'WebsiteAdmin' && admin?.role !== 'SuperAdmin'}
+              disabled={admin?.role === 'Admin'}
               placeholder="Enter company name"
             />
           </div>
@@ -266,7 +241,7 @@ const Settings = () => {
               className="input" 
               value={settings.companyPhone}
               onChange={handleInputChange}
-              disabled={admin?.role !== 'WebsiteAdmin' && admin?.role !== 'SuperAdmin'} // Allow WebsiteAdmin too
+              disabled={admin?.role === 'Admin'}
               placeholder="Enter phone number"
             />
           </div>
@@ -278,7 +253,7 @@ const Settings = () => {
               rows="2" 
               value={settings.companyAddress}
               onChange={handleInputChange}
-              disabled={admin?.role !== 'WebsiteAdmin' && admin?.role !== 'SuperAdmin'}
+              disabled={admin?.role === 'Admin'}
               placeholder="Enter address"
             ></textarea>
           </div>
@@ -290,28 +265,103 @@ const Settings = () => {
               className="input" 
               value={settings.companyEmail}
               onChange={handleInputChange}
-              disabled={admin?.role !== 'WebsiteAdmin' && admin?.role !== 'SuperAdmin'}
+              disabled={admin?.role === 'Admin'}
               placeholder="Enter email"
             />
           </div>
           <div className="flex items-end">
-            {(admin?.role === 'SuperAdmin' || admin?.role === 'WebsiteAdmin') && (
+             {admin?.role !== 'Admin' && (
               <button 
-                className="btn btn-primary w-full"
+                className={`btn btn-primary w-full ${loading ? 'btn-loading' : ''}`}
                 onClick={updateCompanyInfo}
                 disabled={loading}
               >
-                {loading ? 'Updating...' : 'Update Information'}
+                <span>{loading ? 'Updating...' : 'Update Information'}</span>
               </button>
-            )}
+             )}
           </div>
+        </div>
+      </div>
+
+      {/* Push Notification Settings */}
+      <div className="card">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <Bell className="text-purple-600" size={24} />
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">Push Notifications</h3>
+            <p className="text-sm text-gray-600">Receive payment reminders and updates</p>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          {!pushSupported ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-amber-800 text-sm">
+                Push notifications are not supported in this browser. For the best experience, 
+                please use Chrome, Firefox, or Edge.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  {notificationPermission === 'granted' ? (
+                    <BellRing className="text-green-600" size={24} />
+                  ) : (
+                    <BellOff className="text-gray-400" size={24} />
+                  )}
+                  <div>
+                    <p className="font-medium">
+                      {notificationPermission === 'granted' ? 'Notifications Enabled' : 'Notifications Disabled'}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {notificationPermission === 'granted' 
+                        ? 'You will receive payment and billing alerts'
+                        : 'Enable to receive important updates'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleNotificationToggle}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    notificationPermission === 'granted'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-purple-600 text-white hover:bg-purple-700'
+                  }`}
+                >
+                  {notificationPermission === 'granted' ? 'Enabled' : 'Enable'}
+                </button>
+              </div>
+              
+              {notificationPermission === 'granted' && (
+                <button
+                  onClick={testNotification}
+                  className="btn btn-secondary flex items-center gap-2"
+                >
+                  <Bell size={18} />
+                  Send Test Notification
+                </button>
+              )}
+              
+              {notificationPermission === 'denied' && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-red-800 text-sm">
+                    Notifications are blocked. Please enable them in your browser settings 
+                    (click the lock icon in the address bar).
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
       {/* Admin Modal */}
       {showAdminModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
+          <div className="bg-white rounded-none md:rounded-xl max-w-md w-full h-full md:h-auto p-6 flex flex-col justify-center">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">{selectedAdmin ? 'Edit Admin' : 'New Admin'}</h2>
               <button onClick={() => setShowAdminModal(false)}><X size={24}/></button>

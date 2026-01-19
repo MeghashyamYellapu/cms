@@ -8,6 +8,7 @@ const Bills = () => {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('en-US', { month: 'long' }));
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -34,6 +35,7 @@ const Bills = () => {
   };
 
   const handleGenerateBills = async () => {
+    setGenerating(true);
     try {
       const response = await billAPI.generate({
         month: selectedMonth,
@@ -44,6 +46,8 @@ const Bills = () => {
       fetchBills();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to generate bills');
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -132,8 +136,8 @@ const Bills = () => {
 
       {/* Generate Bills Modal */}
       {showGenerateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
+          <div className="bg-white rounded-none md:rounded-xl max-w-md w-full h-full md:h-auto p-6 flex flex-col justify-center">
             <h2 className="text-2xl font-bold mb-4">Generate Monthly Bills</h2>
             
             <div className="space-y-4">
@@ -173,9 +177,10 @@ const Bills = () => {
               <div className="flex gap-3">
                 <button
                   onClick={handleGenerateBills}
-                  className="btn btn-primary flex-1"
+                  className={`btn btn-primary flex-1 ${generating ? 'btn-loading' : ''}`}
+                  disabled={generating}
                 >
-                  Generate Bills
+                  <span>{generating ? 'Generating...' : 'Generate Bills'}</span>
                 </button>
                 <button
                   onClick={() => setShowGenerateModal(false)}

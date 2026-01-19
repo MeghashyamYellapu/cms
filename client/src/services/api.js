@@ -26,10 +26,59 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors
+// Helper to get cache key
+const getCacheKey = (url, params) => {
+  if (!url) return null;
+  const queryString = params ? JSON.stringify(params) : '';
+  return `CACHE_${url}_${queryString}`;
+};
+
+// Response interceptor to handle errors and cache data
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response) => {
+    // CACHE SUCCESSFUL GET REQUESTS
+    if (response.config.method === 'get' && response.data) {
+       try {
+         const key = getCacheKey(response.config.url, response.config.params);
+         if (key) {
+           localStorage.setItem(key, JSON.stringify({
+             timestamp: Date.now(),
+             data: response.data
+           }));
+         }
+       } catch (e) {
+         console.warn('Cache save failed', e);
+       }
+    }
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // OFFLINE FALLBACK
+    if (!error.response && error.code === "ERR_NETWORK" && originalRequest.method === 'get') {
+      try {
+        const key = getCacheKey(originalRequest.url, originalRequest.params);
+        const cachedItem = localStorage.getItem(key);
+        
+        if (cachedItem) {
+          const { data } = JSON.parse(cachedItem);
+          console.log('Serving from cache:', key);
+          // Return cached data as if it were a successful response
+          return Promise.resolve({
+            data: data,
+            status: 200,
+            statusText: 'OK (Cached)',
+            headers: {},
+            config: originalRequest,
+            isCached: true // Flag to indicate cached data
+          });
+        }
+      } catch (e) {
+        console.error('Cache retrieval failed', e);
+      }
+    }
+
     if (error.response?.status === 401) {
       // Unauthorized - clear token and redirect to login
       localStorage.removeItem('token');
@@ -97,6 +146,12 @@ export const adminAPI = {
   create: (data) => api.post('/admins', data),
   update: (id, data) => api.put(`/admins/${id}`, data),
   delete: (id) => api.delete(`/admins/${id}`),
+};
+
+// Public Customer Portal API (no auth required)
+export const portalAPI = {
+  lookup: (phoneNumber) => api.post('/portal/lookup', { phoneNumber }),
+  getBillDetails: (billId, phoneNumber) => api.post(`/portal/bill/${billId}`, { phoneNumber }),
 };
 
 export default api;

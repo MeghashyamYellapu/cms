@@ -32,6 +32,36 @@
     @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
   }
 
+  /* Loading button state */
+  .btn-loading {
+    @apply relative pointer-events-none opacity-80;
+  }
+
+  .btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: btn-spin 0.6s linear infinite;
+  }
+
+  .btn-loading>* {
+    visibility: hidden;
+  }
+
+  @keyframes btn-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .input {
     @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
   }

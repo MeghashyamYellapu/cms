@@ -1,15 +1,98 @@
 {
-    "short_name": "Cable CMS",
+    "short_name": "CableCMS",
     "name": "Cable Billing Management System",
+    "description": "Manage customers, billing, and payments efficiently",
     "icons": [
         {
             "src": "logo.svg",
             "type": "image/svg+xml",
-            "sizes": "192x192 512x512"
+            "sizes": "any"
+        },
+        {
+            "src": "icons/icon-72x72.png",
+            "type": "image/png",
+            "sizes": "72x72",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/icon-96x96.png",
+            "type": "image/png",
+            "sizes": "96x96",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/icon-128x128.png",
+            "type": "image/png",
+            "sizes": "128x128",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/icon-144x144.png",
+            "type": "image/png",
+            "sizes": "144x144",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/icon-152x152.png",
+            "type": "image/png",
+            "sizes": "152x152",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/icon-192x192.png",
+            "type": "image/png",
+            "sizes": "192x192",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/icon-384x384.png",
+            "type": "image/png",
+            "sizes": "384x384",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/icon-512x512.png",
+            "type": "image/png",
+            "sizes": "512x512",
+            "purpose": "maskable any"
         }
     ],
-    "start_url": ".",
+    "start_url": "/",
     "display": "standalone",
-    "theme_color": "#2563eb",
-    "background_color": "#ffffff"
+    "theme_color": "#4f46e5",
+    "background_color": "#f8fafc",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "en",
+    "categories": [
+        "business",
+        "finance",
+        "utilities"
+    ],
+    "shortcuts": [
+        {
+            "name": "New Payment",
+            "short_name": "Payment",
+            "description": "Record a new payment",
+            "url": "/payments?action=new",
+            "icons": [
+                {
+                    "src": "icons/icon-96x96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Customers",
+            "short_name": "Customers",
+            "description": "View all customers",
+            "url": "/customers",
+            "icons": [
+                {
+                    "src": "icons/icon-96x96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
 }
