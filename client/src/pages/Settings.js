@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, settingsAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { Settings as SettingsIcon, User, Bell, Shield, Database, Trash2, Edit, Plus, X, BellRing, BellOff } from 'lucide-react';
+import { User, Bell, X, BellRing, BellOff } from 'lucide-react';
 import { isPushSupported, getNotificationPermission, requestNotificationPermission, showLocalNotification } from '../utils/pwa';
 
 const Settings = () => {
@@ -19,7 +19,7 @@ const Settings = () => {
   });
 
   // Admin Management State
-  const [admins, setAdmins] = useState([]);
+  // const [admins, setAdmins] = useState([]);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [adminForm, setAdminForm] = useState({
@@ -37,7 +37,7 @@ const Settings = () => {
   useEffect(() => {
     fetchSettings();
     if (admin?.role !== 'Admin') {
-      fetchAdmins();
+    // fetchAdmins();
     }
     // Check notification support
     setPushSupported(isPushSupported());
@@ -57,14 +57,14 @@ const Settings = () => {
     }
   };
 
-  const fetchAdmins = async () => {
+  /* const fetchAdmins = async () => {
     try {
       const response = await adminAPI.getAll();
       setAdmins(response.data.data);
     } catch (error) {
       console.error('Fetch admins error:', error);
     }
-  };
+  }; */
 
   const handleInputChange = (e) => {
     // ... (existing logic) ...
@@ -111,13 +111,13 @@ const Settings = () => {
       }
       setShowAdminModal(false);
       resetAdminForm();
-      fetchAdmins();
+      // fetchAdmins();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Operation failed');
     }
   };
 
-  const handleEditAdmin = (adminUser) => {
+  /* const handleEditAdmin = (adminUser) => {
     setSelectedAdmin(adminUser);
     setAdminForm({
       name: adminUser.name,
@@ -127,9 +127,9 @@ const Settings = () => {
       status: adminUser.status
     });
     setShowAdminModal(true);
-  };
+  }; */
 
-  const handleDeleteAdmin = async (id) => {
+  /* const handleDeleteAdmin = async (id) => {
     if (window.confirm('Delete this admin?')) {
       try {
         await adminAPI.delete(id);
@@ -139,7 +139,7 @@ const Settings = () => {
         toast.error(error.response?.data?.message || 'Delete failed');
       }
     }
-  };
+  }; */
 
   const resetAdminForm = () => {
     setSelectedAdmin(null);
@@ -178,7 +178,7 @@ const Settings = () => {
     }
   };
 
-  const canManageAdmins = ['WebsiteAdmin', 'SuperAdmin'].includes(admin?.role);
+  // const canManageAdmins = ['WebsiteAdmin', 'SuperAdmin'].includes(admin?.role);
 
   return (
     <div className="p-6 space-y-6">

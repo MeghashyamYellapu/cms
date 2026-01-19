@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI } from '../services/api';
-import { Users, Shield, CheckCircle, Clock } from 'lucide-react';
+import { Users, Shield, CheckCircle } from 'lucide-react';
 
 const SuperAdminDashboard = () => {
   const [stats, setStats] = useState({
