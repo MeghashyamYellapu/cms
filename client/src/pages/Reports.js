@@ -242,9 +242,9 @@ const Reports = () => {
     : { total: 0, transactions: 0 };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {activeDetailView && (
           <button 
             onClick={() => setActiveDetailView(null)}
@@ -254,13 +254,13 @@ const Reports = () => {
           </button>
         )}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             {activeDetailView === 'ledger' && 'Customer Ledger'}
             {activeDetailView === 'revenue' && 'Revenue Analysis'}
             {activeDetailView === 'outstanding' && 'Outstanding Dues'}
             {!activeDetailView && 'Reports'}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
             {activeDetailView ? 'Detailed view' : 'Generate and export business reports'}
           </p>
         </div>
@@ -270,7 +270,7 @@ const Reports = () => {
       {!activeDetailView && (
         <>
           <div className="card">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 sm:mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Report Type

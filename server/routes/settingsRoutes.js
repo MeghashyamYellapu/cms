@@ -13,8 +13,8 @@ router.use(protect);
 // Get settings - accessible to all authenticated users
 router.get('/', getSettings);
 
-// Update and reset - SuperAdmin only
-router.put('/', authorize('SuperAdmin'), updateSettings);
+// Update settings - accessible to Admin, SuperAdmin, and WebsiteAdmin
+router.put('/', authorize('Admin', 'SuperAdmin', 'WebsiteAdmin'), updateSettings);
 router.post('/reset', authorize('SuperAdmin'), resetSettings);
 
 module.exports = router;

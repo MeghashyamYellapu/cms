@@ -7,7 +7,8 @@ const {
   recordPayment,
   resendReceipt,
   downloadReceipt,
-  getPaymentStats
+  getPaymentStats,
+  sendReceiptBoth
 } = require('../controllers/paymentController');
 const { protect } = require('../middlewares/auth');
 
@@ -22,6 +23,7 @@ router
 router.get('/customer/:customerId', getCustomerPayments);
 router.get('/stats', getPaymentStats);
 router.post('/:id/resend-receipt', resendReceipt);
+router.post('/:id/send-receipt-both', sendReceiptBoth);
 router.get('/:id/download-receipt', downloadReceipt);
 
 router

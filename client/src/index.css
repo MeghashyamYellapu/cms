@@ -8,12 +8,26 @@
   body {
     @apply bg-gray-50 text-gray-900 font-sans;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+  }
+
+  /* Better mobile tap targets */
+  * {
+    -webkit-tap-highlight-color: rgba(99, 102, 241, 0.1);
   }
 }
 
 @layer components {
+
+  /* Mobile-optimized buttons with minimum touch target of 44px */
   .btn {
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .btn-primary {
@@ -62,12 +76,17 @@
     }
   }
 
+  /* Mobile-optimized inputs */
   .input {
     @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
+    min-height: 44px;
+    font-size: 16px;
+    /* Prevents zoom on iOS */
   }
 
+  /* Mobile-optimized cards */
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6;
   }
 
   .badge {
@@ -90,8 +109,10 @@
     @apply bg-blue-100 text-blue-800;
   }
 
+  /* Mobile-responsive table container */
   .table-container {
     @apply overflow-x-auto rounded-lg border border-gray-200;
+    -webkit-overflow-scrolling: touch;
   }
 
   .table {
@@ -103,15 +124,88 @@
   }
 
   .table th {
-    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    @apply px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    white-space: nowrap;
   }
 
   .table td {
-    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+    @apply px-3 sm:px-6 py-4 text-sm text-gray-900;
   }
 
   .table tbody tr {
     @apply hover:bg-gray-50 transition-colors;
+  }
+
+  /* Mobile card view for tables */
+  @media (max-width: 768px) {
+    .table-mobile-card {
+      @apply block;
+    }
+
+    .table-mobile-card thead {
+      @apply hidden;
+    }
+
+    .table-mobile-card tbody {
+      @apply block;
+    }
+
+    .table-mobile-card tr {
+      @apply block mb-4 border border-gray-200 rounded-lg p-4 bg-white;
+    }
+
+    .table-mobile-card td {
+      @apply block text-right px-0 py-2 border-b border-gray-100 last:border-0;
+      position: relative;
+      padding-left: 50%;
+    }
+
+    .table-mobile-card td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 0;
+      width: 45%;
+      padding-right: 10px;
+      white-space: nowrap;
+      font-weight: 600;
+      text-align: left;
+      color: #6b7280;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+  }
+
+  /* Mobile-optimized stat cards */
+  .stat-card {
+    @apply bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200;
+    min-height: 120px;
+  }
+
+  /* Touch-friendly icon buttons */
+  .icon-btn {
+    @apply p-2 rounded-lg transition-colors;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Mobile-optimized modal */
+  .modal-mobile {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4;
+  }
+
+  .modal-content-mobile {
+    @apply bg-white rounded-t-2xl sm:rounded-xl w-full max-h-[90vh] overflow-y-auto;
+    max-width: 100%;
+  }
+
+  @media (min-width: 640px) {
+    .modal-content-mobile {
+      max-width: 640px;
+      max-height: 85vh;
+    }
   }
 }
 
@@ -152,4 +246,86 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* Mobile-specific utilities */
+@media (max-width: 640px) {
+
+  /* Reduce padding on mobile */
+  .mobile-compact {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Stack buttons vertically on mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+
+  .mobile-stack>* {
+    width: 100% !important;
+  }
+
+  /* Hide on mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+
+  /* Full width on mobile */
+  .mobile-full {
+    width: 100% !important;
+  }
+}
+
+/* Tablet and above */
+@media (min-width: 641px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* Safe area insets for PWA */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Slide-up animation for mobile modals */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
 }

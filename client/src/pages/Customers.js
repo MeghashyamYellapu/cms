@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { customerAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import {
   Users,
   Plus,
@@ -12,17 +13,29 @@ import {
   Trash2,
   X,
   Eye,
-  EyeOff
+  EyeOff,
+  Phone,
+  MapPin,
+  Tv,
+  CreditCard,
+  Calendar,
+  IndianRupee,
+  User,
+  FileText,
+  ChevronRight
 } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
 const Customers = () => {
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [viewCustomer, setViewCustomer] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     area: '',
@@ -67,6 +80,23 @@ const Customers = () => {
     }
   };
 
+  // Dynamic validation schema - Aadhaar required only for new customers
+  const getValidationSchema = (isEditing) => Yup.object({
+    name: Yup.string().required('Name is required'),
+    phoneNumber: Yup.string()
+      .matches(/^[6-9]\d{9}$/, 'Invalid phone number')
+      .required('Phone number is required'),
+    aadhaarNumber: isEditing 
+      ? Yup.string().test('aadhaar', 'Aadhaar must be 12 digits', value => !value || /^\d{12}$/.test(value))
+      : Yup.string().matches(/^\d{12}$/, 'Aadhaar must be 12 digits').required('Aadhaar is required'),
+    address: Yup.string().required('Address is required'),
+    area: Yup.string().required('Area is required'),
+    serviceType: Yup.string().required('Service type is required'),
+    packageAmount: Yup.number()
+      .min(0, 'Amount must be positive')
+      .required('Package amount is required')
+  });
+
   const formik = useFormik({
     initialValues: {
       name: '',
@@ -82,28 +112,20 @@ const Customers = () => {
       status: 'Active',
       whatsappEnabled: true
     },
-    validationSchema: Yup.object({
-      name: Yup.string().required('Name is required'),
-      phoneNumber: Yup.string()
-        .matches(/^[6-9]\d{9}$/, 'Invalid phone number')
-        .required('Phone number is required'),
-      aadhaarNumber: Yup.string()
-        .matches(/^\d{12}$/, 'Aadhaar must be 12 digits')
-        .required('Aadhaar is required'),
-      address: Yup.string().required('Address is required'),
-      area: Yup.string().required('Area is required'),
-      serviceType: Yup.string().required('Service type is required'),
-      packageAmount: Yup.number()
-        .min(0, 'Amount must be positive')
-        .required('Package amount is required')
-    }),
+    validationSchema: getValidationSchema(false),
     onSubmit: async (values, { resetForm }) => {
       try {
+        // Remove empty aadhaarNumber when editing
+        const submitValues = { ...values };
+        if (selectedCustomer && !submitValues.aadhaarNumber) {
+          delete submitValues.aadhaarNumber;
+        }
+        
         if (selectedCustomer) {
-          await customerAPI.update(selectedCustomer._id, values);
+          await customerAPI.update(selectedCustomer._id, submitValues);
           toast.success('Customer updated successfully');
         } else {
-          await customerAPI.create(values);
+          await customerAPI.create(submitValues);
           toast.success('Customer created successfully');
         }
         resetForm();
@@ -118,10 +140,11 @@ const Customers = () => {
 
   const handleEdit = (customer) => {
     setSelectedCustomer(customer);
+    // Update validation schema for editing (Aadhaar optional)
     formik.setValues({
       name: customer.name,
       phoneNumber: customer.phoneNumber,
-      aadhaarNumber: '', // Don't show encrypted aadhaar
+      aadhaarNumber: '', // Don't show encrypted aadhaar - leave blank to keep existing
       address: customer.address,
       area: customer.area,
       serviceType: customer.serviceType,
@@ -133,6 +156,15 @@ const Customers = () => {
       whatsappEnabled: customer.whatsappEnabled
     });
     setShowAddModal(true);
+  };
+
+  const handleViewDetails = (customer) => {
+    setViewCustomer(customer);
+    setShowDetailsModal(true);
+  };
+
+  const handleRecordPayment = (customer) => {
+    navigate('/payments', { state: { selectedCustomer: customer } });
   };
 
   const handleDelete = async (id) => {
@@ -170,20 +202,20 @@ const Customers = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
-          <p className="text-gray-600 mt-1">Manage your customer database</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Customers</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage your customer database</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => setShowBulkModal(true)}
-            className="btn btn-secondary flex items-center gap-2"
+            className="btn btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <Upload size={20} />
-            Bulk Upload
+            <span className="text-sm sm:text-base">Bulk Upload</span>
           </button>
           <button
             onClick={() => {
@@ -191,17 +223,17 @@ const Customers = () => {
               formik.resetForm();
               setShowAddModal(true);
             }}
-            className="btn btn-primary flex items-center gap-2"
+            className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <Plus size={20} />
-            Add Customer
+            <span className="text-sm sm:text-base">Add Customer</span>
           </button>
         </div>
       </div>
 
       {/* Filters */}
       <div className="card">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
@@ -245,7 +277,7 @@ const Customers = () => {
       </div>
 
       {/* Table */}
-      <div className="card p-0">
+      <div className="card p-0 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="spinner"></div>
@@ -258,33 +290,86 @@ const Customers = () => {
           </div>
         ) : (
           <>
-            <div className="table-container">
-              <table className="table">
+            {/* Mobile Card View */}
+            <div className="block md:hidden">
+              {customers.map((customer) => (
+                <div 
+                  key={customer._id} 
+                  className="p-4 border-b hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
+                  onClick={() => handleViewDetails(customer)}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <User className="text-indigo-600" size={20} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{customer.name}</p>
+                        <p className="text-xs text-gray-500">{customer.customerId}</p>
+                      </div>
+                    </div>
+                    <span className={`badge ${customer.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                      {customer.status}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm mt-3">
+                    <div className="flex items-center gap-1 text-gray-600">
+                      <Phone size={14} />
+                      <span>{customer.phoneNumber}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-600">
+                      <Tv size={14} />
+                      <span className="badge badge-info text-xs">{customer.serviceType}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-600">
+                      <MapPin size={14} />
+                      <span className="truncate">{customer.area}</span>
+                    </div>
+                    <div className={`flex items-center gap-1 ${customer.previousBalance > 0 ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                      <IndianRupee size={14} />
+                      <span>₹{customer.previousBalance}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                    <span className="text-sm text-gray-500">Package: ₹{customer.packageAmount}</span>
+                    <ChevronRight size={20} className="text-gray-400" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="table min-w-full">
                 <thead>
                   <tr>
-                    <th>Customer ID</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Area</th>
-                    <th>Service</th>
-                    <th>Package</th>
-                    <th>Balance</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th className="whitespace-nowrap">Customer ID</th>
+                    <th className="whitespace-nowrap">Name</th>
+                    <th className="whitespace-nowrap">Phone</th>
+                    <th className="whitespace-nowrap">Area</th>
+                    <th className="whitespace-nowrap">Service</th>
+                    <th className="whitespace-nowrap">Package</th>
+                    <th className="whitespace-nowrap">Balance</th>
+                    <th className="whitespace-nowrap">Status</th>
+                    <th className="whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {customers.map((customer) => (
-                    <tr key={customer._id}>
-                      <td className="font-medium">{customer.customerId}</td>
-                      <td>{customer.name}</td>
-                      <td>{customer.phoneNumber}</td>
-                      <td>{customer.area}</td>
+                    <tr 
+                      key={customer._id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleViewDetails(customer)}
+                    >
+                      <td className="font-medium whitespace-nowrap">{customer.customerId}</td>
+                      <td className="whitespace-nowrap">{customer.name}</td>
+                      <td className="whitespace-nowrap">{customer.phoneNumber}</td>
+                      <td className="whitespace-nowrap">{customer.area}</td>
                       <td>
                         <span className="badge badge-info">{customer.serviceType}</span>
                       </td>
-                      <td>₹{customer.packageAmount}</td>
-                      <td className={customer.previousBalance > 0 ? 'text-red-600 font-medium' : ''}>
+                      <td className="whitespace-nowrap">₹{customer.packageAmount}</td>
+                      <td className={`whitespace-nowrap ${customer.previousBalance > 0 ? 'text-red-600 font-medium' : ''}`}>
                         ₹{customer.previousBalance}
                       </td>
                       <td>
@@ -292,18 +377,18 @@ const Customers = () => {
                           {customer.status}
                         </span>
                       </td>
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleEdit(customer)}
-                            className="text-blue-600 hover:text-blue-800"
+                            onClick={(e) => { e.stopPropagation(); handleEdit(customer); }}
+                            className="text-blue-600 hover:text-blue-800 p-1"
                             title="Edit"
                           >
                             <Edit size={18} />
                           </button>
                           <button
-                            onClick={() => handleDelete(customer._id)}
-                            className="text-red-600 hover:text-red-800"
+                            onClick={(e) => { e.stopPropagation(); handleDelete(customer._id); }}
+                            className="text-red-600 hover:text-red-800 p-1"
                             title="Delete"
                           >
                             <Trash2 size={18} />
@@ -668,6 +753,151 @@ const Customers = () => {
               <button 
                 onClick={() => setShowUploadResultModal(false)}
                 className="btn btn-primary"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Customer Details Modal */}
+      {showDetailsModal && viewCustomer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
+          <div className="bg-white rounded-none md:rounded-xl max-w-2xl w-full h-full md:h-auto md:max-h-[90vh] flex flex-col">
+            <div className="p-4 md:p-6 border-b flex items-center justify-between bg-white md:rounded-t-xl sticky top-0 z-10">
+              <h2 className="text-xl md:text-2xl font-bold">Customer Details</h2>
+              <button
+                onClick={() => { setShowDetailsModal(false); setViewCustomer(null); }}
+                className="text-gray-500 hover:text-gray-700 p-1"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-4 md:p-6 overflow-y-auto flex-1">
+              {/* Customer Header */}
+              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 pb-6 border-b">
+                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mx-auto md:mx-0">
+                  <User className="text-indigo-600" size={32} />
+                </div>
+                <div className="text-center md:text-left flex-1">
+                  <h3 className="text-xl font-bold text-gray-900">{viewCustomer.name}</h3>
+                  <p className="text-gray-500">{viewCustomer.customerId}</p>
+                  <span className={`inline-block mt-2 badge ${viewCustomer.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                    {viewCustomer.status}
+                  </span>
+                </div>
+                <div className={`text-center md:text-right p-4 rounded-xl ${viewCustomer.previousBalance > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+                  <p className="text-sm text-gray-600">Outstanding Balance</p>
+                  <p className={`text-2xl font-bold ${viewCustomer.previousBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    ₹{viewCustomer.previousBalance}
+                  </p>
+                </div>
+              </div>
+
+              {/* Customer Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Phone className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
+                  <div>
+                    <p className="text-xs text-gray-500">Phone Number</p>
+                    <p className="font-medium">{viewCustomer.phoneNumber}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Tv className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
+                  <div>
+                    <p className="text-xs text-gray-500">Service Type</p>
+                    <p className="font-medium">{viewCustomer.serviceType}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <IndianRupee className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
+                  <div>
+                    <p className="text-xs text-gray-500">Package Amount</p>
+                    <p className="font-medium">₹{viewCustomer.packageAmount}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <MapPin className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
+                  <div>
+                    <p className="text-xs text-gray-500">Area</p>
+                    <p className="font-medium">{viewCustomer.area}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg md:col-span-2">
+                  <MapPin className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
+                  <div>
+                    <p className="text-xs text-gray-500">Address</p>
+                    <p className="font-medium">{viewCustomer.address}</p>
+                  </div>
+                </div>
+
+                {viewCustomer.setTopBoxId && (
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <FileText className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
+                    <div>
+                      <p className="text-xs text-gray-500">Set-Top Box ID</p>
+                      <p className="font-medium">{viewCustomer.setTopBoxId}</p>
+                    </div>
+                  </div>
+                )}
+
+                {viewCustomer.cafId && (
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <FileText className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
+                    <div>
+                      <p className="text-xs text-gray-500">CAF ID</p>
+                      <p className="font-medium">{viewCustomer.cafId}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Calendar className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
+                  <div>
+                    <p className="text-xs text-gray-500">Member Since</p>
+                    <p className="font-medium">{new Date(viewCustomer.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Phone className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
+                  <div>
+                    <p className="text-xs text-gray-500">WhatsApp Receipts</p>
+                    <p className="font-medium">{viewCustomer.whatsappEnabled ? 'Enabled' : 'Disabled'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="p-4 md:p-6 border-t bg-gray-50 md:rounded-b-xl flex flex-col sm:flex-row gap-3">
+              <button 
+                onClick={() => handleRecordPayment(viewCustomer)}
+                className="btn btn-primary flex-1 flex items-center justify-center gap-2"
+              >
+                <CreditCard size={20} />
+                <span>Record Payment</span>
+              </button>
+              <button 
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  handleEdit(viewCustomer);
+                }}
+                className="btn btn-secondary flex-1 flex items-center justify-center gap-2"
+              >
+                <Edit size={20} />
+                <span>Edit Customer</span>
+              </button>
+              <button 
+                onClick={() => { setShowDetailsModal(false); setViewCustomer(null); }}
+                className="btn btn-secondary sm:w-auto"
               >
                 Close
               </button>

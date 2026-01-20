@@ -63,6 +63,16 @@ const settingsSchema = new mongoose.Schema({
     default: 'Hello {customerName},\n\nPayment received successfully! ✅\n\nService: {serviceType}\nPackage: ₹{packageAmount}\nPaid Amount: ₹{paidAmount}\nRemaining Balance: ₹{remainingBalance}\nReceipt ID: {receiptId}\n\nThank you for your payment!\n\n- {companyName}'
   },
   
+  // UPI Payment Settings
+  upiEnabled: {
+    type: Boolean,
+    default: false
+  },
+  upiId: {
+    type: String,
+    default: ''
+  },
+  
   // System Settings
   enableNotifications: {
     type: Boolean,

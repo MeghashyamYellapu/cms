@@ -15,7 +15,9 @@ const Settings = () => {
     companyEmail: '',
     billingDay: 1,
     defaultPackageAmount: 500,
-    whatsappEnabled: false
+    whatsappEnabled: false,
+    upiEnabled: false,
+    upiId: ''
   });
 
   // Admin Management State
@@ -181,25 +183,25 @@ const Settings = () => {
   // const canManageAdmins = ['WebsiteAdmin', 'SuperAdmin'].includes(admin?.role);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1">Manage system configuration</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
+        <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage system configuration</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {/* Profile Settings */}
-        <div className="card md:col-span-2">
+        <div className="card">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <User className="text-blue-600" size={24} />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <User className="text-blue-600" size={20} />
             </div>
             <div>
-              <h3 className="font-semibold text-lg">Profile Settings</h3>
-              <p className="text-sm text-gray-600">Manage your account</p>
+              <h3 className="font-semibold text-base sm:text-lg">Profile Settings</h3>
+              <p className="text-xs sm:text-sm text-gray-600">Manage your account</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
              <div>
                <p className="text-sm text-gray-600">Name</p>
                <p className="font-medium text-lg">{admin?.name}</p>
@@ -280,6 +282,73 @@ const Settings = () => {
               </button>
              )}
           </div>
+        </div>
+      </div>
+
+      {/* UPI Payment Settings */}
+      <div className="card">
+        <h3 className="font-semibold text-lg mb-4">UPI Payment Settings</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Enable UPI payments in the customer portal. Customers can pay their outstanding balance via PhonePe, Google Pay, or Paytm.
+        </p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <p className="font-medium">Enable UPI Payments</p>
+              <p className="text-sm text-gray-500">Allow customers to pay via UPI apps</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="upiEnabled"
+                checked={settings.upiEnabled}
+                onChange={handleInputChange}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+            </label>
+          </div>
+
+          {settings.upiEnabled && (
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">
+                UPI ID <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="upiId"
+                className="input"
+                value={settings.upiId}
+                onChange={handleInputChange}
+                placeholder="yourname@paytm / yourname@ybl / yourname@oksbi"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Enter your UPI ID (e.g., 9876543210@paytm). This will be used for customer payments.
+              </p>
+            </div>
+          )}
+
+          <button
+              className={`btn btn-primary ${loading ? 'btn-loading' : ''}`}
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  await settingsAPI.update({
+                    upiEnabled: settings.upiEnabled,
+                    upiId: settings.upiId
+                  });
+                  toast.success('UPI settings updated successfully');
+                } catch (error) {
+                  console.error('Update UPI settings error:', error);
+                  toast.error(error.response?.data?.message || 'Failed to update UPI settings');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading || (settings.upiEnabled && !settings.upiId)}
+            >
+              <span>{loading ? 'Updating...' : 'Update UPI Settings'}</span>
+            </button>
         </div>
       </div>
 

@@ -4,6 +4,8 @@ const Customer = require('../models/Customer');
 const { logAudit } = require('../middlewares/auditLog');
 const { generateReceipt } = require('../utils/receiptGenerator');
 const { sendWhatsAppReceipt } = require('../utils/whatsappService');
+const { sendPaymentReceiptSMS } = require('../utils/smsService');
+const Settings = require('../models/Settings');
 
 // Helper to add isolation filter for PAYMENTS
 const getIsolationFilter = (req) => {
@@ -480,6 +482,156 @@ exports.downloadReceipt = async (req, res) => {
     });
   } catch (error) {
     console.error('Download receipt error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Send receipt via WhatsApp and SMS
+// @route   POST /api/payments/:id/send-receipt-both
+// @access  Private
+exports.sendReceiptBoth = async (req, res) => {
+  try {
+    const query = { _id: req.params.id, ...getIsolationFilter(req) };
+    const payment = await Payment.findOne(query)
+      .populate('customerId')
+      .populate('billId')
+      .populate('collectedBy', 'name');
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment not found'
+      });
+    }
+
+    const customer = payment.customerId;
+    const settings = await Settings.getSettings();
+
+    // Generate receipt
+    let receiptPath = null;
+    try {
+      receiptPath = await generateReceipt(payment);
+    } catch (error) {
+      console.error('Receipt generation error:', error);
+    }
+
+    const results = {
+      whatsapp: { success: false, status: 'Not Sent' },
+      sms: { success: false, status: 'Not Sent' }
+    };
+
+    // Format bill period
+    const billPeriod = payment.billId ? `${payment.billId.month} ${payment.billId.year}` : 'N/A';
+
+    // Send WhatsApp (with image if available)
+    if (customer.whatsappEnabled) {
+      try {
+        const whatsappResult = await sendWhatsAppReceipt(customer, payment, receiptPath);
+        
+        if (whatsappResult.success) {
+          results.whatsapp = {
+            success: true,
+            status: 'Sent',
+            messageId: whatsappResult.messageId
+          };
+          payment.receiptSent = true;
+          payment.whatsappStatus = 'Sent';
+          payment.whatsappMessageId = whatsappResult.messageId;
+        } else {
+          results.whatsapp = {
+            success: false,
+            status: 'Failed',
+            error: whatsappResult.message
+          };
+          payment.whatsappStatus = 'Failed';
+        }
+      } catch (error) {
+        console.error('WhatsApp send error:', error);
+        results.whatsapp = {
+          success: false,
+          status: 'Failed',
+          error: error.message
+        };
+        payment.whatsappStatus = 'Failed';
+      }
+    } else {
+      results.whatsapp = {
+        success: false,
+        status: 'Not Enabled',
+        message: 'WhatsApp is not enabled for this customer'
+      };
+    }
+
+    // Send SMS
+    if (settings.smsEnabled) {
+      try {
+        const companyDetails = {
+          companyName: settings.companyName,
+          companyPhone: settings.companyPhone,
+          companyAddress: settings.companyAddress
+        };
+
+        const smsResult = await sendPaymentReceiptSMS(customer, payment, billPeriod, companyDetails);
+        
+        if (smsResult.success) {
+          results.sms = {
+            success: true,
+            status: 'Sent',
+            messageId: smsResult.messageId
+          };
+          payment.smsStatus = 'Sent';
+          payment.smsMessageId = smsResult.messageId;
+        } else {
+          results.sms = {
+            success: false,
+            status: 'Failed',
+            error: smsResult.message
+          };
+          payment.smsStatus = 'Failed';
+        }
+      } catch (error) {
+        console.error('SMS send error:', error);
+        results.sms = {
+          success: false,
+          status: 'Failed',
+          error: error.message
+        };
+        payment.smsStatus = 'Failed';
+      }
+    } else {
+      results.sms = {
+        success: false,
+        status: 'Not Enabled',
+        message: 'SMS service is not enabled'
+      };
+    }
+
+    await payment.save();
+
+    // Log audit
+    await logAudit(req, 'SEND_RECEIPT_BOTH', 'Payment', payment._id, {
+      receiptId: payment.receiptId,
+      customerName: customer.name,
+      whatsappStatus: results.whatsapp.status,
+      smsStatus: results.sms.status
+    });
+
+    // Determine overall success
+    const overallSuccess = results.whatsapp.success || results.sms.success;
+
+    res.status(overallSuccess ? 200 : 500).json({
+      success: overallSuccess,
+      message: overallSuccess 
+        ? 'Receipt sent successfully' 
+        : 'Failed to send receipt via both channels',
+      data: results
+    });
+  } catch (error) {
+    console.error('Send receipt both error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

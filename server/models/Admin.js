@@ -50,6 +50,11 @@ const adminSchema = new mongoose.Schema({
     email: { type: String, trim: true },
     gst: { type: String, trim: true },
     footer: { type: String, trim: true, default: 'Thank you for your business!' }
+  },
+  // UPI Payment Settings (per admin)
+  upiSettings: {
+    upiEnabled: { type: Boolean, default: false },
+    upiId: { type: String, trim: true, default: '' }
   }
 }, {
   timestamps: true

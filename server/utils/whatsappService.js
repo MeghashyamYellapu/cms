@@ -125,30 +125,56 @@ module.exports = {
          imageBuffer = fs.readFileSync(receiptPath);
       }
 
+      // Format service type
+      const serviceType = customer.serviceType === 'SDV' ? 'Cable TV' : 
+                         customer.serviceType === 'RailWire' ? 'Internet' : 
+                         customer.serviceType;
+
+      // Format bill period
+      const billPeriod = payment.billId ? `${payment.billId.month} ${payment.billId.year}` : 'N/A';
+
+      // Create detailed message
+      const detailedMessage = `Hello ${customer.name} 👋
+Your payment for ${serviceType} has been successfully received ✅
+
+🧾 Payment Receipt No: ${payment.receiptId}
+👤 Customer ID: ${customer.customerId}
+👤 Customer Name: ${customer.name}
+📅 Billing Period: ${billPeriod}
+🕒 Generated On: ${new Date(payment.paymentDate).toLocaleDateString('en-IN', { 
+  day: '2-digit', 
+  month: 'short', 
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+})}
+💰 Total Due: ₹${payment.billId?.totalPayable || 0}
+💵 Amount Paid: ₹${payment.paidAmount}
+💳 Payment Mode: ${payment.paymentMode}
+💚 Remaining Balance: ₹${payment.remainingBalance}
+
+Thank you for your cooperation and for choosing us! 😊
+
+${settings.companyName || 'Cable Service'}
+📞 Contact: ${settings.companyPhone || ''}
+${settings.companyAddress || ''}
+
+🏢 Authorized Billing & Payment Receipt
+This is system generated bill no need signature
+
+Verify at: ${process.env.CLIENT_URL || 'https://your-portal.com'}/portal`;
+
       // Try sending image if available
       if (imageBuffer) {
-        const caption = `Payment Receipt for ${payment.receiptId}\nAmount: ₹${payment.paidAmount}`;
-        const result = await sendImageMessage(phone, imageBuffer, caption);
+        const result = await sendImageMessage(phone, imageBuffer, detailedMessage);
         if (result.success) {
           return { success: true, status: 'Sent', messageId: result.messageId };
         }
         console.log('Failed to send image, falling back to text...');
       }
 
-      // Fallback to text
-      let message = settings.whatsappMessageTemplate || 'Hello {customerName}, Payment of ₹{paidAmount} received.';
-      
-      // Replace variables
-      message = message
-        .replace('{customerName}', customer.name)
-        .replace('{serviceType}', customer.serviceType || 'Cable')
-        .replace('{packageAmount}', payment.billId?.totalPayable || 0)
-        .replace('{paidAmount}', payment.paidAmount)
-        .replace('{remainingBalance}', payment.remainingBalance)
-        .replace('{receiptId}', payment.receiptId)
-        .replace('{companyName}', settings.companyName);
-
-      const textResult = await sendViaMetaAPI(phone, message);
+      // Fallback to text message
+      const textResult = await sendViaMetaAPI(phone, detailedMessage);
       if (textResult.success) {
         return { success: true, status: 'Sent', messageId: textResult.messageId };
       }

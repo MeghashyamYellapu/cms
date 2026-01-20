@@ -44,6 +44,18 @@ exports.getSettings = async (req, res) => {
         if (companyDetails.footer) settings.receiptFooter = companyDetails.footer;
     }
     
+    // For Admin/SuperAdmin: Overlay their UPI settings if they have them
+    if (currentAdmin && (currentAdmin.role === 'Admin' || currentAdmin.role === 'SuperAdmin')) {
+      if (currentAdmin.upiSettings) {
+        settings.upiEnabled = currentAdmin.upiSettings.upiEnabled || false;
+        settings.upiId = currentAdmin.upiSettings.upiId || '';
+      } else {
+        // If admin hasn't set UPI settings yet, keep global or default
+        settings.upiEnabled = settings.upiEnabled || false;
+        settings.upiId = settings.upiId || '';
+      }
+    }
+    
     res.status(200).json({
       success: true,
       data: settings
@@ -63,41 +75,120 @@ exports.getSettings = async (req, res) => {
 // @access  Private (SuperAdmin, WebsiteAdmin, Admin)
 exports.updateSettings = async (req, res) => {
   try {
-    // For Admin and SuperAdmin: Update their OWN profile's company details
-    // This enables inheritance: SuperAdmin's details flow down to their child Admins
-    if (req.admin.role === 'Admin' || req.admin.role === 'SuperAdmin') {
-        // Fetch fresh admin from DB to ensure we have the latest
+    // Handle UPI settings - Store in Admin profile for Admin/SuperAdmin, global for WebsiteAdmin
+    const hasUpiSettings = req.body.upiEnabled !== undefined || req.body.upiId !== undefined;
+    
+    if (hasUpiSettings) {
+      // For Admin and SuperAdmin: Store UPI settings in their profile
+      if (req.admin.role === 'Admin' || req.admin.role === 'SuperAdmin') {
         const admin = await Admin.findById(req.admin._id);
         
-        if (!admin.companyDetails) {
-            admin.companyDetails = {
-                name: '', address: '', phone: '', email: '', gst: '', footer: 'Thank you for your business!'
-            };
+        if (!admin.upiSettings) {
+          admin.upiSettings = { upiEnabled: false, upiId: '' };
         }
         
-        if (req.body.companyName !== undefined) admin.companyDetails.name = req.body.companyName;
-        if (req.body.companyAddress !== undefined) admin.companyDetails.address = req.body.companyAddress;
-        if (req.body.companyPhone !== undefined) admin.companyDetails.phone = req.body.companyPhone;
-        if (req.body.companyEmail !== undefined) admin.companyDetails.email = req.body.companyEmail;
+        if (req.body.upiEnabled !== undefined) {
+          admin.upiSettings.upiEnabled = req.body.upiEnabled;
+        }
+        if (req.body.upiId !== undefined) {
+          admin.upiSettings.upiId = req.body.upiId;
+        }
         
-        admin.markModified('companyDetails');
+        admin.markModified('upiSettings');
         await admin.save();
         
         // Log audit
-        await logAudit(req, 'UPDATE_COMPANY_DETAILS', 'Admin', admin._id, {
-            updatedFields: ['companyDetails']
+        await logAudit(req, 'UPDATE_UPI_SETTINGS', 'Admin', admin._id, {
+          updatedFields: ['upiSettings']
         });
         
-        return res.status(200).json({
+        // If only UPI settings were updated, return here
+        if (Object.keys(req.body).every(key => ['upiEnabled', 'upiId'].includes(key))) {
+          return res.status(200).json({
             success: true,
-            message: 'Company settings updated successfully',
+            message: 'UPI settings updated successfully',
             data: {
-                companyName: admin.companyDetails.name,
-                companyAddress: admin.companyDetails.address,
-                companyPhone: admin.companyDetails.phone,
-                companyEmail: admin.companyDetails.email
+              upiEnabled: admin.upiSettings.upiEnabled,
+              upiId: admin.upiSettings.upiId
             }
+          });
+        }
+      } else {
+        // For WebsiteAdmin: Store in global Settings
+        let settings = await Settings.getSettings();
+        
+        if (req.body.upiEnabled !== undefined) {
+          settings.upiEnabled = req.body.upiEnabled;
+        }
+        if (req.body.upiId !== undefined) {
+          settings.upiId = req.body.upiId;
+        }
+        
+        settings.updatedBy = req.admin._id;
+        await settings.save();
+        
+        // Log audit
+        await logAudit(req, 'UPDATE_UPI_SETTINGS', 'Settings', settings._id, {
+          updatedFields: ['upiEnabled', 'upiId']
         });
+        
+        // If only UPI settings were updated, return here
+        if (Object.keys(req.body).every(key => ['upiEnabled', 'upiId'].includes(key))) {
+          return res.status(200).json({
+            success: true,
+            message: 'UPI settings updated successfully',
+            data: {
+              upiEnabled: settings.upiEnabled,
+              upiId: settings.upiId
+            }
+          });
+        }
+      }
+    }
+    
+    // For Admin and SuperAdmin: Update their OWN profile's company details
+    // This enables inheritance: SuperAdmin's details flow down to their child Admins
+    if (req.admin.role === 'Admin' || req.admin.role === 'SuperAdmin') {
+        // Check if company details are being updated
+        const hasCompanyDetails = req.body.companyName !== undefined || 
+                                   req.body.companyAddress !== undefined || 
+                                   req.body.companyPhone !== undefined || 
+                                   req.body.companyEmail !== undefined;
+        
+        if (hasCompanyDetails) {
+          // Fetch fresh admin from DB to ensure we have the latest
+          const admin = await Admin.findById(req.admin._id);
+          
+          if (!admin.companyDetails) {
+              admin.companyDetails = {
+                  name: '', address: '', phone: '', email: '', gst: '', footer: 'Thank you for your business!'
+              };
+          }
+          
+          if (req.body.companyName !== undefined) admin.companyDetails.name = req.body.companyName;
+          if (req.body.companyAddress !== undefined) admin.companyDetails.address = req.body.companyAddress;
+          if (req.body.companyPhone !== undefined) admin.companyDetails.phone = req.body.companyPhone;
+          if (req.body.companyEmail !== undefined) admin.companyDetails.email = req.body.companyEmail;
+          
+          admin.markModified('companyDetails');
+          await admin.save();
+          
+          // Log audit
+          await logAudit(req, 'UPDATE_COMPANY_DETAILS', 'Admin', admin._id, {
+              updatedFields: ['companyDetails']
+          });
+          
+          return res.status(200).json({
+              success: true,
+              message: 'Company settings updated successfully',
+              data: {
+                  companyName: admin.companyDetails.name,
+                  companyAddress: admin.companyDetails.address,
+                  companyPhone: admin.companyDetails.phone,
+                  companyEmail: admin.companyDetails.email
+              }
+          });
+        }
     }
 
     // For WebsiteAdmin: Update Global Settings (system-wide defaults)
@@ -118,6 +209,8 @@ exports.updateSettings = async (req, res) => {
       'whatsappApiKey',
       'whatsappPhoneId',
       'whatsappMessageTemplate',
+      'upiEnabled',
+      'upiId',
       'enableNotifications',
       'enableAutoBackup'
     ];

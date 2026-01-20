@@ -68,18 +68,38 @@ const paymentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Auto-generate receipt ID before saving (Scoped to Admin)
+// Auto-generate receipt ID before saving (Globally unique with retry)
 paymentSchema.pre('save', async function(next) {
   if (!this.receiptId || this.receiptId === '') {
-    // Count only payments by this same collector for scoped numbering
-    const count = await mongoose.model('Payment').countDocuments({ 
-      collectedBy: this.collectedBy 
-    });
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    // Format: RCP[YY][MM]-[sequence] - unique per admin
-    this.receiptId = `RCP${year}${month}${String(count + 1).padStart(6, '0')}`;
+    const prefix = `RCP${year}${month}`;
+    
+    // Count all payments with this month's prefix for accurate numbering
+    const count = await mongoose.model('Payment').countDocuments({
+      receiptId: { $regex: `^${prefix}` }
+    });
+    
+    // Also find the highest receipt number to handle any gaps
+    const lastPayment = await mongoose.model('Payment')
+      .findOne({ receiptId: { $regex: `^${prefix}` } })
+      .sort({ createdAt: -1, _id: -1 })
+      .select('receiptId')
+      .lean();
+    
+    let nextNumber = count + 1;
+    
+    // If there's a last payment, ensure we're higher than its number
+    if (lastPayment && lastPayment.receiptId) {
+      const lastNumber = parseInt(lastPayment.receiptId.replace(prefix, ''), 10);
+      if (!isNaN(lastNumber) && lastNumber >= nextNumber) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+    
+    // Format: RCP[YY][MM][sequence] - globally unique
+    this.receiptId = `${prefix}${String(nextNumber).padStart(6, '0')}`;
   }
   next();
 });

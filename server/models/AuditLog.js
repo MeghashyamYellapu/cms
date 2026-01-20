@@ -23,12 +23,16 @@ const auditLogSchema = new mongoose.Schema({
       'UPDATE_ADMIN',
       'BLOCK_ADMIN',
       'UPDATE_SETTINGS',
+      'UPDATE_UPI_SETTINGS',
+      'UPDATE_COMPANY_DETAILS',
+      'RESET_SETTINGS',
+      'SEND_RECEIPT_BOTH',
       'EXPORT_REPORT'
     ]
   },
   entity: {
     type: String,
-    enum: ['Customer', 'Bill', 'Payment', 'Admin', 'System'],
+    enum: ['Customer', 'Bill', 'Payment', 'Admin', 'System', 'Settings'],
     required: true
   },
   entityId: {

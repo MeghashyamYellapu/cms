@@ -122,55 +122,55 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50/50 pb-12">
       {/* Hero Header */}
-      <div className="bg-white border-b border-gray-100 px-8 py-8 md:py-10 mb-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10 mb-6 sm:mb-8">
+        <div className="max-w-7xl mx-auto flex flex-col gap-4">
           <div>
-            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600">
               Dashboard
             </h1>
-            <p className="text-gray-500 mt-2 text-lg">
+            <p className="text-gray-500 mt-2 text-sm sm:text-base lg:text-lg">
               Welcome back, <span className="font-semibold text-gray-800">{admin?.companyDetails?.name || admin?.name}</span>! Here's what's happening today.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
              <button 
                 onClick={() => navigate('/payments')} 
-                className="btn bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 flex items-center gap-2 px-6 py-3 rounded-xl transition-all hover:scale-105"
+                className="btn bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl transition-all hover:scale-105 w-full sm:w-auto"
              >
                 <PlusCircle size={20} />
-                <span>New Payment</span>
+                <span className="text-sm sm:text-base">New Payment</span>
              </button>
              <button 
                 onClick={() => navigate('/bills')} 
-                className="btn bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 flex items-center gap-2 px-6 py-3 rounded-xl transition-all"
+                className="btn bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl transition-all w-full sm:w-auto"
              >
                 <FileText size={20} />
-                <span>Manage Bills</span>
+                <span className="text-sm sm:text-base">Manage Bills</span>
              </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 md:px-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         {/* Main Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {mainStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <div 
                 key={index}
-                className={`relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br ${stat.gradient} text-white shadow-xl ${stat.shadow} transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl`}
+                className={`relative overflow-hidden rounded-2xl p-4 sm:p-6 bg-gradient-to-br ${stat.gradient} text-white shadow-xl ${stat.shadow} transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl`}
               >
                 <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                            <Icon size={24} className="text-white" />
+                    <div className="flex justify-between items-start mb-3 sm:mb-4">
+                        <div className="p-2 sm:p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                            <Icon size={20} className="text-white sm:w-6 sm:h-6" />
                         </div>
                         {/* Decorative Circle */}
-                        <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                        <div className="absolute -top-4 -right-4 w-20 h-20 sm:w-24 sm:h-24 bg-white/10 rounded-full blur-2xl"></div>
                     </div>
-                    <p className="text-white/80 text-sm font-medium mb-1">{stat.title}</p>
-                    <h3 className="text-3xl font-bold tracking-tight">{stat.value}</h3>
+                    <p className="text-white/80 text-xs sm:text-sm font-medium mb-1">{stat.title}</p>
+                    <h3 className="text-2xl sm:text-3xl font-bold tracking-tight">{stat.value}</h3>
                 </div>
               </div>
             );
@@ -178,18 +178,18 @@ const Dashboard = () => {
         </div>
 
         {/* Secondary Stats & Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           
           {/* Detailed Breakdown */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-4 sm:space-y-6">
               {/* Secondary Grid */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {secondaryStats.map((stat, i) => (
-                      <div key={i} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                          <div className={`w-10 h-10 ${stat.bg} ${stat.color} rounded-lg flex items-center justify-center mb-3`}>
-                              <stat.icon size={20} />
+                      <div key={i} className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 ${stat.bg} ${stat.color} rounded-lg flex items-center justify-center mb-2 sm:mb-3`}>
+                              <stat.icon size={18} className="sm:w-5 sm:h-5" />
                           </div>
-                          <h4 className="text-2xl font-bold text-gray-800 mb-1">{stat.value || 0}</h4>
+                          <h4 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1">{stat.value || 0}</h4>
                           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{stat.label}</p>
                       </div>
                   ))}
@@ -197,15 +197,15 @@ const Dashboard = () => {
 
               {/* Quick Areas */}
               {stats.customers?.areaStats && stats.customers.areaStats.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <TrendingUp size={20} className="text-indigo-500" /> Top Areas
+                <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+                        <TrendingUp size={18} className="text-indigo-500 sm:w-5 sm:h-5" /> Top Areas
                     </h3>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                         {stats.customers.areaStats.slice(0, 3).map((area, i) => (
                             <div key={i} className="flex justify-between items-center group">
-                                <span className="text-gray-600 font-medium group-hover:text-indigo-600 transition-colors">{area._id}</span>
-                                <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">{area.count}</span>
+                                <span className="text-sm sm:text-base text-gray-600 font-medium group-hover:text-indigo-600 transition-colors">{area._id}</span>
+                                <span className="bg-indigo-50 text-indigo-700 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold">{area.count}</span>
                             </div>
                         ))}
                     </div>
@@ -214,18 +214,18 @@ const Dashboard = () => {
           </div>
 
           {/* Charts Area */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               
               {/* Revenue Chart */}
-              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                  <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-lg font-bold text-gray-800">Revenue Trend (Last 7 Days)</h3>
-                      <span className="text-sm text-green-500 font-medium bg-green-50 px-3 py-1 rounded-full">
+              <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-800">Revenue Trend (Last 7 Days)</h3>
+                      <span className="text-xs sm:text-sm text-green-500 font-medium bg-green-50 px-2 sm:px-3 py-1 rounded-full w-fit">
                           + Live Updates
                       </span>
                   </div>
                   {dailyCollections.length > 0 ? (
-                    <div className="h-[300px] w-full">
+                    <div className="h-[250px] sm:h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={dailyCollections}>
                             <CartesianGrid strokeDasharray="3 3" opacity={0.3} vertical={false} />
@@ -233,18 +233,18 @@ const Dashboard = () => {
                                 dataKey="_id" 
                                 axisLine={false} 
                                 tickLine={false} 
-                                tick={{fill: '#9ca3af', fontSize: 12}} 
+                                tick={{fill: '#9ca3af', fontSize: 11}} 
                                 dy={10} 
                             />
                             <YAxis 
                                 axisLine={false} 
                                 tickLine={false} 
-                                tick={{fill: '#9ca3af', fontSize: 12}} 
+                                tick={{fill: '#9ca3af', fontSize: 11}} 
                                 tickFormatter={(value) => `₹${value/1000}k`} 
                             />
                             <Tooltip 
                                 cursor={{fill: '#f3f4f6'}}
-                                contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                                contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px'}}
                             />
                             <Bar 
                                 dataKey="amount" 
@@ -262,25 +262,25 @@ const Dashboard = () => {
                         </ResponsiveContainer>
                     </div>
                   ) : (
-                    <div className="h-[300px] flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl">
+                    <div className="h-[250px] sm:h-[300px] flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl text-sm">
                         No revenue data available
                     </div>
                   )}
               </div>
 
               {/* Bottom Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   {/* Service Types */}
-                  <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                      <h3 className="text-lg font-bold text-gray-800 mb-4">Service Distribution</h3>
-                      <div className="h-[200px]">
+                  <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Service Distribution</h3>
+                      <div className="h-[180px] sm:h-[200px]">
                           {serviceTypeData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
                                         data={serviceTypeData}
-                                        innerRadius={60}
-                                        outerRadius={80}
+                                        innerRadius={50}
+                                        outerRadius={70}
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
@@ -292,10 +292,10 @@ const Dashboard = () => {
                                 </PieChart>
                             </ResponsiveContainer>
                           ) : (
-                            <div className="h-full flex items-center justify-center text-gray-400">No data</div>
+                            <div className="h-full flex items-center justify-center text-gray-400 text-sm">No data</div>
                           )}
                       </div>
-                      <div className="flex justify-center gap-4 mt-2">
+                      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mt-2">
                           {serviceTypeData.map((item, i) => (
                               <div key={i} className="flex items-center gap-2">
                                   <div className="w-3 h-3 rounded-full" style={{backgroundColor: PIE_COLORS[i % PIE_COLORS.length]}}></div>
@@ -306,18 +306,18 @@ const Dashboard = () => {
                   </div>
 
                   {/* Quick Tip or Promo */}
-                  <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-2xl p-6 text-white relative overflow-hidden flex flex-col justify-center">
+                  <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-2xl p-4 sm:p-6 text-white relative overflow-hidden flex flex-col justify-center">
                         <div className="relative z-10">
-                            <h3 className="text-xl font-bold mb-2">Need Help?</h3>
-                            <p className="text-indigo-200 text-sm mb-4">
+                            <h3 className="text-lg sm:text-xl font-bold mb-2">Need Help?</h3>
+                            <p className="text-indigo-200 text-xs sm:text-sm mb-3 sm:mb-4">
                                 Check out the documentation or contact support if you need assistance managing billing.
                             </p>
-                            <button className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            <button className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors">
                                 View Documentation
                             </button>
                         </div>
                         {/* Decorative */}
-                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-indigo-500 rounded-full blur-3xl opacity-50"></div>
+                        <div className="absolute -bottom-10 -right-10 w-32 h-32 sm:w-40 sm:h-40 bg-indigo-500 rounded-full blur-3xl opacity-50"></div>
                   </div>
               </div>
           </div>

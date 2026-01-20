@@ -16,7 +16,9 @@ import {
   Clock,
   IndianRupee,
   Wifi,
-  Shield
+  Shield,
+  QrCode,
+  Smartphone
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -377,6 +379,147 @@ const CustomerPortal = () => {
                 )}
               </div>
             </div>
+
+            {/* UPI Payment Section - Show when UPI is enabled for all customers */}
+            {customerData.company && customerData.company.upiEnabled && customerData.company.upiId && (
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-indigo-200 rounded-2xl p-6 shadow-lg">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <QrCode className="text-white" size={32} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Pay via UPI</h3>
+                  <p className="text-gray-600">
+                    {customerData.customer.currentBalance > 0 
+                      ? 'Pay your outstanding balance instantly using any UPI app'
+                      : 'Pay your monthly subscription instantly using any UPI app'}
+                  </p>
+                </div>
+
+                {/* Amount Display */}
+                <div className="bg-white rounded-xl p-6 mb-6 text-center shadow-md">
+                  <p className="text-gray-600 text-sm mb-2">
+                    {customerData.customer.currentBalance > 0 ? 'Outstanding Balance' : 'Monthly Subscription'}
+                  </p>
+                  <p className="text-4xl font-bold text-indigo-600">
+                    ₹{customerData.customer.currentBalance > 0 
+                      ? customerData.customer.currentBalance 
+                      : customerData.customer.monthlyCharge || customerData.customer.packageAmount || 250}
+                  </p>
+                  {customerData.customer.currentBalance <= 0 && (
+                    <p className="text-xs text-green-600 mt-2">✅ No outstanding dues</p>
+                  )}
+                </div>
+
+                {/* UPI ID Display */}
+                <div className="bg-white rounded-xl p-4 mb-6 shadow-md">
+                  <p className="text-gray-600 text-sm mb-2 text-center">UPI ID</p>
+                  <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-lg p-3">
+                    <span className="font-mono text-lg font-semibold text-gray-900">{customerData.company.upiId}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(customerData.company.upiId);
+                        alert('UPI ID copied to clipboard!');
+                      }}
+                      className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                {/* QR Code */}
+                {(() => {
+                  const upiAmount = customerData.customer.currentBalance > 0 
+                    ? customerData.customer.currentBalance 
+                    : customerData.customer.monthlyCharge || customerData.customer.packageAmount || 250;
+                  const transactionNote = encodeURIComponent(`${customerData.customer.name} | ${customerData.customer.customerId} | ${customerData.customer.serviceType} | ${customerData.bills[0]?.month || ''} ${customerData.bills[0]?.year || ''}`);
+                  
+                  return (
+                    <>
+                      <div className="bg-white rounded-xl p-6 mb-6 text-center shadow-md">
+                        <p className="text-gray-600 text-sm mb-4">Scan QR Code to Pay</p>
+                        <div className="inline-block bg-white p-4 rounded-xl border-2 border-gray-200">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${customerData.company.upiId}%26pn=${encodeURIComponent(customerData.company.name)}%26am=${upiAmount}%26cu=INR%26tn=${transactionNote}`}
+                            alt="UPI QR Code"
+                            className="w-48 h-48 mx-auto"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-3">Scan with any UPI app to pay</p>
+                      </div>
+
+                      {/* UPI App Buttons */}
+                      <div className="space-y-3">
+                        <p className="text-center text-gray-700 font-medium mb-4">Or pay directly using:</p>
+                        
+                        {/* PhonePe */}
+                        <a
+                          href={`phonepe://pay?pa=${customerData.company.upiId}&pn=${encodeURIComponent(customerData.company.name)}&am=${upiAmount}&cu=INR&tn=${transactionNote}`}
+                          className="flex items-center justify-between w-full bg-white hover:bg-purple-50 border-2 border-purple-200 rounded-xl p-4 transition-all hover:shadow-md group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+                              <Smartphone className="text-white" size={24} />
+                            </div>
+                            <div className="text-left">
+                              <p className="font-semibold text-gray-900">PhonePe</p>
+                              <p className="text-sm text-gray-500">Pay ₹{upiAmount} with PhonePe</p>
+                            </div>
+                          </div>
+                          <ChevronRight className="text-purple-600 group-hover:translate-x-1 transition-transform" size={24} />
+                        </a>
+
+                        {/* Google Pay */}
+                        <a
+                          href={`gpay://upi/pay?pa=${customerData.company.upiId}&pn=${encodeURIComponent(customerData.company.name)}&am=${upiAmount}&cu=INR&tn=${transactionNote}`}
+                          className="flex items-center justify-between w-full bg-white hover:bg-blue-50 border-2 border-blue-200 rounded-xl p-4 transition-all hover:shadow-md group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                              <Smartphone className="text-white" size={24} />
+                            </div>
+                            <div className="text-left">
+                              <p className="font-semibold text-gray-900">Google Pay</p>
+                              <p className="text-sm text-gray-500">Pay ₹{upiAmount} with Google Pay</p>
+                            </div>
+                          </div>
+                          <ChevronRight className="text-blue-600 group-hover:translate-x-1 transition-transform" size={24} />
+                        </a>
+
+                        {/* Paytm */}
+                        <a
+                          href={`paytmmp://pay?pa=${customerData.company.upiId}&pn=${encodeURIComponent(customerData.company.name)}&am=${upiAmount}&cu=INR&tn=${transactionNote}`}
+                          className="flex items-center justify-between w-full bg-white hover:bg-cyan-50 border-2 border-cyan-200 rounded-xl p-4 transition-all hover:shadow-md group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-cyan-600 rounded-lg flex items-center justify-center">
+                              <Smartphone className="text-white" size={24} />
+                            </div>
+                            <div className="text-left">
+                              <p className="font-semibold text-gray-900">Paytm</p>
+                              <p className="text-sm text-gray-500">Pay ₹{upiAmount} with Paytm</p>
+                            </div>
+                          </div>
+                          <ChevronRight className="text-cyan-600 group-hover:translate-x-1 transition-transform" size={24} />
+                        </a>
+                      </div>
+                    </>
+                  );
+                })()}
+
+                {/* Payment Instructions */}
+                <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <p className="text-sm text-yellow-800 font-medium mb-2">📱 Payment Instructions:</p>
+                  <ol className="text-sm text-yellow-700 space-y-1 ml-4 list-decimal">
+                    <li>Click on your preferred UPI app button above</li>
+                    <li>Verify the amount and UPI ID</li>
+                    <li>Complete the payment in your UPI app</li>
+                    <li>Save the transaction ID for your records</li>
+                    <li>Contact the operator to confirm payment</li>
+                  </ol>
+                </div>
+              </div>
+            )}
 
             {/* Help Section */}
             {customerData.company && (

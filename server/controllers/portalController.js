@@ -2,6 +2,7 @@ const Customer = require('../models/Customer');
 const Payment = require('../models/Payment');
 const Bill = require('../models/Bill');
 const Admin = require('../models/Admin');
+const Settings = require('../models/Settings');
 
 // @desc    Public customer lookup by phone number
 // @route   POST /api/portal/lookup
@@ -72,6 +73,7 @@ exports.customerLookup = async (req, res) => {
       setTopBoxId: customer.setTopBoxId || 'N/A',
       cafId: customer.cafId || 'N/A',
       packageAmount: customer.packageAmount,
+      monthlyCharge: customer.monthlyCharge || customer.packageAmount,
       currentBalance: customer.previousBalance,
       status: customer.status,
       joinDate: customer.createdAt
@@ -87,25 +89,39 @@ exports.customerLookup = async (req, res) => {
       totalPaid: payments.reduce((sum, p) => sum + (p.paidAmount || 0), 0)
     };
 
-    // Fetch Admin Details for Company Info
+    // Fetch Admin Details for Company Info and UPI Settings
     let companyDetails = null;
+    let adminUpiSettings = null;
+    
     if (customer.createdBy) {
-      const admin = await Admin.findById(customer.createdBy).select('companyDetails parentId');
+      const admin = await Admin.findById(customer.createdBy).select('companyDetails parentId upiSettings').lean();
       
       if (admin) {
-        // 1. Try Admin's own details
+        // 1. Try Admin's own company details
         if (admin.companyDetails && admin.companyDetails.name) {
-          companyDetails = admin.companyDetails;
+          companyDetails = { ...admin.companyDetails };
         } 
         // 2. Try Parent Admin's details (if SuperAdmin)
         else if (admin.parentId) {
-          const parentAdmin = await Admin.findById(admin.parentId).select('companyDetails');
+          const parentAdmin = await Admin.findById(admin.parentId).select('companyDetails upiSettings').lean();
           if (parentAdmin && parentAdmin.companyDetails && parentAdmin.companyDetails.name) {
-            companyDetails = parentAdmin.companyDetails;
+            companyDetails = { ...parentAdmin.companyDetails };
           }
+          // Also check parent's UPI settings if admin doesn't have their own
+          if (parentAdmin && parentAdmin.upiSettings && parentAdmin.upiSettings.upiEnabled && parentAdmin.upiSettings.upiId) {
+            adminUpiSettings = parentAdmin.upiSettings;
+          }
+        }
+        
+        // Get admin's UPI settings (priority: admin's own settings override parent's)
+        if (admin.upiSettings && admin.upiSettings.upiEnabled && admin.upiSettings.upiId) {
+          adminUpiSettings = admin.upiSettings;
         }
       }
     }
+
+    // Get UPI settings from Settings model (fallback)
+    const settings = await Settings.getSettings();
 
     // Default company details if none found
     if (!companyDetails) {
@@ -115,6 +131,17 @@ exports.customerLookup = async (req, res) => {
         email: '',
         address: ''
       };
+    }
+
+    // Add UPI settings to company details
+    // Priority: Admin's UPI settings > Global Settings
+    if (adminUpiSettings && adminUpiSettings.upiEnabled && adminUpiSettings.upiId) {
+      companyDetails.upiEnabled = true;
+      companyDetails.upiId = adminUpiSettings.upiId;
+    } else {
+      // Fallback to global settings
+      companyDetails.upiEnabled = settings.upiEnabled || false;
+      companyDetails.upiId = settings.upiId || '';
     }
 
     res.status(200).json({

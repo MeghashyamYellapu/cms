@@ -129,6 +129,7 @@ export const paymentAPI = {
   getByCustomer: (customerId) => api.get(`/payments/customer/${customerId}`),
   create: (data) => api.post('/payments', data),
   resendReceipt: (id) => api.post(`/payments/${id}/resend-receipt`),
+  sendReceiptBoth: (id) => api.post(`/payments/${id}/send-receipt-both`),
   downloadReceipt: (id) => api.get(`/payments/${id}/download-receipt`, { responseType: 'blob' }),
   getStats: (params) => api.get('/payments/stats', { params }),
 };
