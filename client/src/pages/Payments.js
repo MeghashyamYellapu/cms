@@ -247,68 +247,39 @@ This is system generated bill no need signature
 
 Verify at: ${window.location.origin}/portal`;
 
-    // Check if Web Share API is supported (mobile devices)
+    // Check if mobile device
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const canShare = navigator.canShare && navigator.share;
     
-    if (canShare && isMobile) {
-      // Mobile: Use Web Share API to share image + text together
-      try {
-        toast.loading('Preparing receipt for sharing...');
+    if (isMobile) {
+      // MOBILE: Download image first, then open WhatsApp directly with the customer's number
+      // Using wa.me URL opens WhatsApp directly to that contact (not generic share sheet)
+      
+      // 1. Download the receipt image
+      const downloadUrl = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `Receipt_${payment.receiptId}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up URL after short delay
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 100);
+      
+      // 2. Open WhatsApp directly to customer's number with message
+      setTimeout(() => {
+        // Use whatsapp:// protocol for mobile - opens WhatsApp app directly
+        const whatsappUrl = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
         
-        // Ensure we have a proper blob
-        let imageBlob = file;
+        window.location.href = whatsappUrl;
         
-        // If file is not already a Blob, convert it
-        if (!(file instanceof Blob)) {
-          console.error('File is not a Blob:', file);
-          throw new Error('Invalid file format');
-        }
-
-        // Create a proper File object with correct MIME type
-        const fileName = `Receipt_${payment.receiptId}.png`;
-        const shareFile = new File([imageBlob], fileName, { 
-          type: 'image/png',
-          lastModified: Date.now()
+        toast.success('📎 Receipt downloaded!\n\n1. WhatsApp opened with customer\n2. Attach the receipt image\n3. Send', {
+          duration: 6000
         });
-
-        // Verify the file can be shared
-        const shareData = {
-          title: 'Payment Receipt',
-          text: message,
-          files: [shareFile]
-        };
-
-        // Check if this data can be shared
-        if (navigator.canShare && !navigator.canShare(shareData)) {
-          console.log('Cannot share this data, falling back...');
-          throw new Error('Share not supported for this data');
-        }
-
-        toast.dismiss();
-        
-        // Share the file
-        await navigator.share(shareData);
-        
-        toast.success('✅ Receipt shared successfully!\n\nSelect WhatsApp to send.', {
-          duration: 4000
-        });
-        
-      } catch (error) {
-        toast.dismiss();
-        
-        if (error.name === 'AbortError') {
-          // User cancelled the share
-          toast.info('Share cancelled');
-        } else {
-          console.error('Share error:', error);
-          // Fallback to download + open WhatsApp
-          toast.info('Using fallback method...');
-          fallbackShareMethod(file, message, formattedPhone, payment.receiptId);
-        }
-      }
+      }, 500);
+      
     } else {
-      // Desktop or Web Share not supported: Download + Open WhatsApp
+      // DESKTOP: Download + Open WhatsApp Web
       fallbackShareMethod(file, message, formattedPhone, payment.receiptId);
     }
   };
