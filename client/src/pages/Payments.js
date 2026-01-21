@@ -124,6 +124,15 @@ const Payments = () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const element = receiptRef.current;
+      
+      if (!element) {
+        toast.dismiss('receipt-action');
+        toast.error('Receipt template not ready');
+        setPrintingPayment(null);
+        setPrintAction(null);
+        return;
+      }
+      
       const canvas = await html2canvas(element, {
         scale: 2, // High quality
         backgroundColor: '#ffffff',
@@ -134,40 +143,47 @@ const Payments = () => {
       const receiptId = printingPayment.receiptId;
       const fileName = `Receipt_${receiptId}.png`;
 
-      // Convert to Blob
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          toast.error('Failed to generate image');
-          return;
-        }
+      // Convert to Blob using Promise wrapper for better error handling
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((b) => {
+          if (b) {
+            resolve(b);
+          } else {
+            reject(new Error('Failed to create blob'));
+          }
+        }, 'image/png');
+      });
 
-        const file = new File([blob], fileName, { type: 'image/png' });
+      const file = new File([blob], fileName, { type: 'image/png' });
+      
+      // Dismiss loading toast
+      toast.dismiss('receipt-action');
 
-        if (printAction === 'download') {
-          // DOWNLOAD ACTION
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = fileName;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          toast.success('Receipt downloaded successfully');
+      if (printAction === 'download') {
+        // DOWNLOAD ACTION
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success('Receipt downloaded successfully');
 
-        } else if (printAction === 'share') {
-          // SHARE ACTION
-          await shareToWhatsApp(file, printingPayment);
-        }
-        
-        // Reset state
-        setPrintingPayment(null);
-        setPrintAction(null);
-      }, 'image/png');
+      } else if (printAction === 'share') {
+        // SHARE ACTION
+        await shareToWhatsApp(file, printingPayment);
+      }
+      
+      // Reset state
+      setPrintingPayment(null);
+      setPrintAction(null);
 
     } catch (error) {
       console.error('Receipt generation error:', error);
-      toast.error('Failed to generate receipt');
+      toast.dismiss('receipt-action');
+      toast.error('Failed to generate receipt: ' + error.message);
       setPrintingPayment(null);
       setPrintAction(null);
     }
@@ -180,6 +196,12 @@ const Payments = () => {
     // Format phone: remove non-digits, ensure country code (default 91)
     let formattedPhone = phoneNumber.replace(/\D/g, '');
     if (formattedPhone.length === 10) formattedPhone = '91' + formattedPhone;
+    
+    // Validate phone number
+    if (!formattedPhone || formattedPhone.length < 10) {
+      toast.error('Customer phone number is missing or invalid');
+      return;
+    }
 
     // Format service type
     const serviceType = customer?.serviceType === 'SDV' ? 'Cable TV' : 
@@ -305,15 +327,25 @@ Verify at: ${window.location.origin}/portal`;
     // Clean up the URL after a short delay
     setTimeout(() => URL.revokeObjectURL(url), 100);
     
-    // 2. Open WhatsApp
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const whatsappUrl = isMobile 
-        ? `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`
-        : `https://web.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
-        
-    window.open(whatsappUrl, '_blank');
+    // 2. Open WhatsApp with a small delay to avoid popup blocker
+    setTimeout(() => {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      // Use wa.me for better compatibility (works on both mobile and desktop)
+      const whatsappUrl = isMobile 
+          ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`
+          : `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+          
+      // Use location.href as fallback if window.open is blocked
+      const newWindow = window.open(whatsappUrl, '_blank');
+      
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        // Popup was blocked, try direct navigation
+        window.location.href = whatsappUrl;
+      }
+    }, 300);
     
-    toast('📎 Receipt downloaded!\n\n1. Check your Downloads folder\n2. Attach it in WhatsApp\n3. Send', {
+    toast('📎 Receipt downloaded!\n\n1. WhatsApp will open shortly\n2. Attach the downloaded image\n3. Send to customer', {
       icon: '✅',
       duration: 7000
     });
@@ -519,6 +551,7 @@ Verify at: ${window.location.origin}/portal`;
 
   // Uses client-side generation now
   const handleReceiptAction = (payment, action) => {
+    toast.loading(action === 'share' ? 'Preparing receipt for WhatsApp...' : 'Generating receipt...', { id: 'receipt-action' });
     setPrintAction(action);
     setPrintingPayment(payment);
   };
