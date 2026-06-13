@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://cmsbackend.up.railway.app/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://cable-management-service-4ys8.onrender.com/api';
 
 console.log('🔗 Connecting to API:', API_URL);
 
