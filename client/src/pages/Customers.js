@@ -83,14 +83,13 @@ const Customers = () => {
   };
 
   // Dynamic validation schema - Aadhaar required only for new customers
-  const getValidationSchema = (isEditing) => Yup.object({
+  const validationSchema = Yup.object({
     name: Yup.string().required('Name is required'),
     phoneNumber: Yup.string()
       .matches(/^[6-9]\d{9}$/, 'Invalid phone number')
       .required('Phone number is required'),
-    aadhaarNumber: isEditing 
-      ? Yup.string().test('aadhaar', 'Aadhaar must be 12 digits', value => !value || /^\d{12}$/.test(value))
-      : Yup.string().matches(/^\d{12}$/, 'Aadhaar must be 12 digits').required('Aadhaar is required'),
+    aadhaarNumber: Yup.string()
+      .test('aadhaar', 'Aadhaar must be 12 digits', value => !value || /^\d{12}$/.test(value)),
     address: Yup.string().required('Address is required'),
     area: Yup.string().required('Area is required'),
     serviceType: Yup.string().required('Service type is required'),
@@ -114,7 +113,7 @@ const Customers = () => {
       status: 'Active',
       whatsappEnabled: true
     },
-    validationSchema: getValidationSchema(false),
+    validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
         // Remove empty aadhaarNumber when editing
@@ -179,6 +178,33 @@ const Customers = () => {
         toast.error(error.response?.data?.message || 'Delete failed');
       }
     }
+  };
+
+  const handleDownloadTemplate = () => {
+    const XLSX = require('xlsx');
+
+    const headers = [
+      'name', 'phoneNumber', 'aadhaarNumber', 'address', 'area',
+      'serviceType', 'setTopBoxId', 'cafId', 'packageAmount', 'previousBalance', 'status'
+    ];
+
+    const sampleRows = [
+      ['Ravi Kumar',    '9876543210', '123456789012', '12 MG Road, Hyderabad', 'Kukatpally', 'SDV',     'STB001', 'CAF001', 500, 0,   'Active'],
+      ['Lakshmi Devi',  '9123456780', '',             '45 Tank Bund, Vizag',   'Gajuwaka',  'APSFL',   'STB002', 'CAF002', 300, 150, 'Active'],
+      ['Suresh Babu',   '8765432109', '987654321098', '78 NH 16, Vijayawada',  'Benz Circle','RailWire','STB003', '',       400, 0,   'Active'],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleRows]);
+
+    // Column widths
+    ws['!cols'] = [
+      { wch: 18 }, { wch: 14 }, { wch: 15 }, { wch: 28 }, { wch: 14 },
+      { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 10 }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Customers');
+    XLSX.writeFile(wb, 'customer_upload_template.xlsx');
   };
 
   const handleBulkUpload = async (e) => {
@@ -489,7 +515,7 @@ const Customers = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Aadhaar Number * {selectedCustomer && '(Leave blank to keep existing)'}
+                    Aadhaar Number <span className="text-gray-400 font-normal">(optional{selectedCustomer ? ' — leave blank to keep existing' : ''})</span>
                   </label>
                   <input
                     type="text"
@@ -673,24 +699,22 @@ const Customers = () => {
                 </p>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800 font-medium mb-2">
-                  📋 Required Columns:
-                </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-1.5">
+                <p className="text-sm text-blue-800 font-semibold">📋 Column Guide</p>
                 <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• name, phoneNumber, aadhaarNumber (optional)</li>
-                  <li>• address (optional), area, serviceType</li>
-                  <li>• packageAmount (optional)</li>
+                  <li><span className="font-medium">Required:</span> name, phoneNumber, area, serviceType</li>
+                  <li><span className="font-medium">serviceType values:</span> SDV, APSFL, RailWire</li>
+                  <li><span className="font-medium">Optional:</span> aadhaarNumber, address, setTopBoxId, cafId, packageAmount, previousBalance, status</li>
                 </ul>
               </div>
 
-              <a
-                href="/excel-template.xlsx"
+              <button
+                onClick={handleDownloadTemplate}
                 className="btn btn-secondary w-full flex items-center justify-center gap-2"
               >
                 <Download size={20} />
-                Download Template
-              </a>
+                Download Sample Template
+              </button>
             </div>
           </div>
         </div>

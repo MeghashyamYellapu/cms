@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const CryptoJS = require('crypto-js');
+require('./Counter'); // ensure Counter schema is registered before the pre-save hook runs
 
 const customerSchema = new mongoose.Schema({
   customerId: {

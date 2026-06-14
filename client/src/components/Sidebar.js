@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -12,21 +12,35 @@ import {
   Menu,
   X,
   Shield,
-  User
+  User,
+  ChevronDown
 } from 'lucide-react';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(window.innerWidth >= 1024);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { admin, logout } = useAuth();
 
   // Close sidebar on route change (mobile only)
-  React.useEffect(() => {
+  useEffect(() => {
     if (window.innerWidth < 1024) {
       setIsOpen(false);
     }
   }, [location]);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   // Define menu items based on role
   const isSuperOrWebsiteAdmin = ['SuperAdmin', 'WebsiteAdmin'].includes(admin?.role);
@@ -69,11 +83,46 @@ const Sidebar = () => {
         >
           {isOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
+
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-xs font-bold">CB</span>
           </div>
           <span className="font-bold text-gray-800 text-sm">Cable Billing</span>
+        </div>
+
+        {/* User menu — right side of mobile top bar */}
+        <div className="ml-auto relative" ref={userMenuRef}>
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-gray-100 transition-colors"
+            aria-label="User menu"
+          >
+            <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center">
+              <User size={15} className="text-indigo-600" />
+            </div>
+            <span className="text-sm font-medium text-gray-700 max-w-[80px] truncate hidden xs:block">
+              {admin?.name?.split(' ')[0]}
+            </span>
+            <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Dropdown */}
+          {showUserMenu && (
+            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
+              <div className="px-4 py-2.5 border-b border-gray-100">
+                <p className="text-sm font-semibold text-gray-900 truncate">{admin?.name}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{admin?.role}</p>
+              </div>
+              <button
+                onClick={() => { setShowUserMenu(false); handleLogout(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors text-sm font-medium"
+              >
+                <LogOut size={16} />
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -125,9 +174,10 @@ const Sidebar = () => {
           })}
         </nav>
 
-        {/* User info */}
-        <div className="p-3 border-t border-gray-100">
-          <div className={`flex items-center gap-3 mb-2 p-2 rounded-xl bg-gray-50 ${!isOpen ? 'lg:justify-center' : ''}`}>
+        {/* User info + Logout */}
+        <div className="p-3 border-t border-gray-100 space-y-1">
+          {/* User card */}
+          <div className={`flex items-center gap-3 p-2 rounded-xl bg-gray-50 ${!isOpen ? 'lg:justify-center' : ''}`}>
             <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
               <User size={18} className="text-indigo-600" />
             </div>
@@ -138,14 +188,16 @@ const Sidebar = () => {
               </div>
             )}
           </div>
+
+          {/* Sign out — always visible */}
           <button
             onClick={handleLogout}
             className={`w-full flex items-center gap-3 px-3 py-2.5 text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-all text-sm font-medium ${
               !isOpen ? 'lg:justify-center' : ''
             }`}
-            title={!isOpen ? 'Logout' : ''}
+            title={!isOpen ? 'Sign Out' : ''}
           >
-            <LogOut size={18} />
+            <LogOut size={18} className="flex-shrink-0" />
             {isOpen && <span>Sign Out</span>}
           </button>
         </div>

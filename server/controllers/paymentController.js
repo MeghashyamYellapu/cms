@@ -68,9 +68,6 @@ exports.recordPayment = async (req, res) => {
 
     const customer = await Customer.findOne(customerQuery);
 
-    // Verify bill belongs to this customer (prevents cross-tenant bill access)
-    const bill = await Bill.findOne({ _id: billId, customerId: customer._id });
-
     if (!customer) {
       return res.status(404).json({
         success: false,
@@ -78,11 +75,39 @@ exports.recordPayment = async (req, res) => {
       });
     }
 
+    // Find the target bill — if billId was provided use it, otherwise auto-pick best unpaid bill
+    let bill = null;
+    if (billId) {
+      bill = await Bill.findOne({ _id: billId, customerId: customer._id });
+    }
+
     if (!bill) {
-      return res.status(404).json({
-        success: false,
-        message: 'Bill not found'
-      });
+      // Fall back to latest unpaid bill for this customer
+      bill = await Bill.findOne({ customerId: customer._id, status: { $ne: 'Paid' } })
+        .sort({ createdAt: -1 });
+    }
+
+    if (!bill) {
+      // No unpaid bill exists — auto-generate one for the current month so payment can proceed
+      const now = new Date();
+      const month = now.toLocaleString('en-US', { month: 'long' });
+      const year = now.getFullYear();
+      const existingBill = await Bill.findOne({ customerId: customer._id, month, year });
+
+      if (existingBill) {
+        bill = existingBill;
+      } else {
+        const totalPayable = (customer.packageAmount || 0) + (customer.previousBalance || 0);
+        bill = await Bill.create({
+          customerId: customer._id,
+          month, year,
+          packageAmount: customer.packageAmount || 0,
+          previousBalance: customer.previousBalance || 0,
+          totalPayable,
+          generatedBy: customer.createdBy,
+          superAdminId: customer.superAdminId
+        });
+      }
     }
 
     // Calculate remaining balance

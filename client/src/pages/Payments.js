@@ -74,26 +74,26 @@ const Payments = () => {
         setTotalOutstanding(freshCustomer.previousBalance || 0);
       }
 
-      // 2. Fetch bills to find the latest active bill
+      // 2. Fetch bills to find the best unpaid bill
       const billResponse = await billAPI.getByCustomer(customerId);
       const bills = billResponse.data.data;
-      
+
       if (bills && bills.length > 0) {
-        // Filter unpaid bills for display
         const unpaidBills = bills.filter(bill => bill.status !== 'Paid');
         setCustomerBills(unpaidBills);
-        
-        // Sort by creation date (newest first) to get latest bill
-        const sortedBills = bills.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        const latestBill = sortedBills[0];
-        formik.setFieldValue('billId', latestBill._id);
-        
-        // Use the latest bill's remaining balance as the most accurate outstanding amount
-        if (latestBill.remainingBalance !== undefined) {
-          setTotalOutstanding(latestBill.remainingBalance);
+
+        // Prefer latest unpaid bill; fall back to latest overall if all paid
+        const pool = unpaidBills.length > 0 ? unpaidBills : bills;
+        const targetBill = pool.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+        formik.setFieldValue('billId', targetBill._id);
+
+        if (targetBill.remainingBalance !== undefined) {
+          setTotalOutstanding(targetBill.remainingBalance);
         }
       } else {
         setCustomerBills([]);
+        formik.setFieldValue('billId', '');
+        // Backend will auto-create a bill when payment is submitted
       }
     } catch (error) {
       console.error('Error fetching customer balance and bills:', error);
@@ -365,7 +365,6 @@ Verify at: ${window.location.origin}/portal`;
     },
     validationSchema: Yup.object({
       customerId: Yup.string().required('Customer is required'),
-      billId: Yup.string().required('Bill is required'),
       paidAmount: Yup.number()
         .min(1, 'Amount must be greater than 0')
         .required('Amount is required'),
@@ -921,6 +920,17 @@ Verify at: ${window.location.origin}/portal`;
                 
                 {/* Hidden Bill ID field */}
                 <input type="hidden" {...formik.getFieldProps('billId')} />
+
+                {/* Bill status — visible feedback when customer is selected */}
+                {selectedCustomer && (
+                  <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg ${
+                    formik.values.billId
+                      ? 'bg-green-50 text-green-700 border border-green-200'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}>
+                    <span>{formik.values.billId ? '✓ Bill found' : '⚠ No bill yet — one will be auto-created on submit'}</span>
+                  </div>
+                )}
 
                 {/* Amount and Payment Mode */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

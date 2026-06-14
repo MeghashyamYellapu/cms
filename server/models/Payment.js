@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+require('./Counter'); // ensure Counter schema is registered before the pre-save hook runs
 
 const paymentSchema = new mongoose.Schema({
   customerId: {
