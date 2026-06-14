@@ -43,26 +43,6 @@ dirs.forEach(dir => {
 });
 
 // ------------------- ✅ CORS CONFIG START -------------------
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : [];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (Postman, mobile apps)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true
-}));
-// ------------------- ✅ CORS CONFIG END -------------------
-
-// ── CORS — restrict to configured origins ──
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
   .split(',').map(o => o.trim()).filter(Boolean);
 
@@ -75,6 +55,7 @@ app.use(cors({
   },
   credentials: true
 }));
+// ------------------- ✅ CORS CONFIG END -------------------
 
 // Middleware
 app.use(helmet());
