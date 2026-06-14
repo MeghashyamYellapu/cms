@@ -26,6 +26,6 @@ router.post('/lookup', portalIpLimiter, portalPhoneLimiter, customerLookup);
 // @route   POST /api/portal/bill/:billId
 // @desc    Get bill details (requires phone verification)
 // @access  Public
-router.post('/bill/:billId', portalLimiter, getBillDetails);
+router.post('/bill/:billId', portalIpLimiter, portalPhoneLimiter, getBillDetails);
 
 module.exports = router;
