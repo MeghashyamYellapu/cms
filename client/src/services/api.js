@@ -147,6 +147,11 @@ export const adminAPI = {
   create: (data) => api.post('/admins', data),
   update: (id, data) => api.put(`/admins/${id}`, data),
   delete: (id) => api.delete(`/admins/${id}`),
+  // Agent management (Admin role only)
+  getAgents: () => api.get('/admins/agents'),
+  createAgent: (data) => api.post('/admins/agents', data),
+  updateAgent: (id, data) => api.put(`/admins/agents/${id}`, data),
+  deleteAgent: (id) => api.delete(`/admins/agents/${id}`),
 };
 
 // Public Customer Portal API (no auth required)

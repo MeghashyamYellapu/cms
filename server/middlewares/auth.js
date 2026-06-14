@@ -47,8 +47,15 @@ exports.protect = async (req, res, next) => {
        req.superAdminId = req.admin._id;
     } else if (req.admin.role === 'Admin') {
        // If Admin has no parent (e.g. created by WebsiteAdmin or legacy), isolate to self
-       // This prevents "undefined" which leads to Global Access in filters
-       req.superAdminId = req.admin.parentId || req.admin._id; 
+       req.superAdminId = req.admin.parentId || req.admin._id;
+    } else if (req.admin.role === 'Agent') {
+       if (!req.admin.parentId) {
+         return res.status(403).json({
+           success: false,
+           message: 'Agent account is not properly configured. Contact your administrator.'
+         });
+       }
+       req.superAdminId = req.admin.parentId;
     }
 
     next();

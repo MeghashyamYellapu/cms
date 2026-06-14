@@ -227,14 +227,15 @@ const CustomerPortal = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 px-4 py-4 flex items-center justify-center gap-2 font-medium transition-colors ${
+                    className={`flex-1 px-2 sm:px-4 py-3 sm:py-4 flex items-center justify-center gap-1.5 sm:gap-2 font-medium transition-colors text-sm sm:text-base ${
                       activeTab === tab.id
                         ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
                         : 'text-gray-500 hover:bg-gray-50'
                     }`}
                   >
-                    <tab.icon size={18} />
-                    <span>{tab.label}</span>
+                    <tab.icon size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0" />
+                    <span className="hidden xs:inline sm:inline">{tab.label}</span>
+                    <span className="xs:hidden sm:hidden text-xs">{tab.label.substring(0, 3)}</span>
                   </button>
                 ))}
               </div>

@@ -22,10 +22,22 @@ import LandingPage from './pages/LandingPage';
 
 const DashboardWrapper = () => {
     const { admin } = useAuth();
+    if (admin?.role === 'Agent') {
+        return <Navigate to="/customers" replace />;
+    }
     if (['SuperAdmin', 'WebsiteAdmin'].includes(admin?.role)) {
         return <SuperAdminDashboard />;
     }
     return <Dashboard />;
+};
+
+// Guards routes that Agents cannot access
+const AgentGuard = ({ children }) => {
+    const { admin } = useAuth();
+    if (admin?.role === 'Agent') {
+        return <Navigate to="/customers" replace />;
+    }
+    return children;
 };
 
 function App() {
@@ -71,15 +83,15 @@ function App() {
                 <PrivateRoute>
                   <div className="flex">
                     <Sidebar />
-                    <main className="flex-1 lg:ml-64 transition-all duration-300 pt-14 lg:pt-0">
+                    <main className="flex-1 lg:ml-64 transition-all duration-300 pt-14 lg:pt-0 min-h-screen">
                       <Routes>
                         <Route path="/dashboard" element={<DashboardWrapper />} />
-                        <Route path="/admins" element={<Admins />} />
+                        <Route path="/admins" element={<AgentGuard><Admins /></AgentGuard>} />
                         <Route path="/customers" element={<Customers />} />
-                        <Route path="/bills" element={<Bills />} />
+                        <Route path="/bills" element={<AgentGuard><Bills /></AgentGuard>} />
                         <Route path="/payments" element={<Payments />} />
-                        <Route path="/reports" element={<Reports />} />
-                        <Route path="/settings" element={<Settings />} />
+                        <Route path="/reports" element={<AgentGuard><Reports /></AgentGuard>} />
+                        <Route path="/settings" element={<AgentGuard><Settings /></AgentGuard>} />
                         {/* Catch all inside dashboard goes to dashboard */}
                         <Route path="*" element={<Navigate to="/dashboard" replace />} />
                       </Routes>

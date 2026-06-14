@@ -90,7 +90,7 @@ const LandingPage = () => {
 
         {/* Mobile Menu Dropdown */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 p-6 absolute w-full shadow-xl animate-in slide-in-from-top-5">
+          <div className="md:hidden bg-white border-t border-slate-100 p-6 absolute w-full shadow-xl animate-slide-down">
              <div className="flex flex-col gap-4">
                 <a href="#features" className="text-base font-medium text-slate-600 py-2" onClick={() => setIsMenuOpen(false)}>Features</a>
                 <a href="#how-it-works" className="text-base font-medium text-slate-600 py-2" onClick={() => setIsMenuOpen(false)}>How it Works</a>
@@ -177,7 +177,7 @@ const LandingPage = () => {
                 />
                 
                 {/* Floating Card 1 */}
-                <div className="absolute -bottom-8 -left-8 bg-white p-4 rounded-xl shadow-xl border border-slate-100 flex items-center gap-4 animate-bounce-slow">
+                <div className="absolute -bottom-8 -left-8 bg-white p-4 rounded-xl shadow-xl border border-slate-100 flex items-center gap-4 animate-[bounceSlow_3s_ease-in-out_infinite]">
                     <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
                         <CheckCircle size={24} />
                     </div>
@@ -192,20 +192,20 @@ const LandingPage = () => {
 
       {/* Stats Section */}
       <section className="py-12 bg-slate-900 text-white">
-         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-slate-800">
-            <div className="text-center">
+         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            <div className="text-center p-4 rounded-xl border border-slate-800">
                <div className="text-3xl md:text-4xl font-bold text-indigo-400 mb-1">100%</div>
                <div className="text-sm text-slate-400">Uptime</div>
             </div>
-            <div className="text-center">
+            <div className="text-center p-4 rounded-xl border border-slate-800">
                <div className="text-3xl md:text-4xl font-bold text-emerald-400 mb-1">Secure</div>
                <div className="text-sm text-slate-400">Data Encryption</div>
             </div>
-             <div className="text-center">
+            <div className="text-center p-4 rounded-xl border border-slate-800">
                <div className="text-3xl md:text-4xl font-bold text-violet-400 mb-1">24/7</div>
                <div className="text-sm text-slate-400">Support</div>
             </div>
-             <div className="text-center">
+            <div className="text-center p-4 rounded-xl border border-slate-800">
                <div className="text-3xl md:text-4xl font-bold text-amber-400 mb-1">PWA</div>
                <div className="text-sm text-slate-400">Offline Ready</div>
             </div>

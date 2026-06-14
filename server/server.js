@@ -1,10 +1,30 @@
 require('dotenv').config();
+
+// ── Startup secrets validation — crash fast if placeholders are still in use ──
+const PLACEHOLDER_JWT    = 'your_super_secret_jwt_key_change_this_in_production';
+const PLACEHOLDER_ENC    = 'your_32_character_encryption_key_here_change_this';
+const PLACEHOLDER_MONGO  = 'mongodb+srv://Meghashyam:tnUGyApj7wON7UgS@';
+
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === PLACEHOLDER_JWT) {
+  console.error('❌ FATAL: JWT_SECRET is not set or is still the default placeholder. Set a strong random secret.');
+  process.exit(1);
+}
+if (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY === PLACEHOLDER_ENC) {
+  console.error('❌ FATAL: ENCRYPTION_KEY is not set or is still the default placeholder. Set a 32-character random key.');
+  process.exit(1);
+}
+if (process.env.MONGODB_URI && process.env.MONGODB_URI.startsWith(PLACEHOLDER_MONGO)) {
+  console.error('❌ FATAL: MONGODB_URI still uses the committed credentials. Rotate your Atlas password immediately.');
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
 const connectDB = require('./config/db');
@@ -25,29 +45,51 @@ dirs.forEach(dir => {
   }
 });
 
-// Middleware
-app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
-app.use(compression()); // Compress responses
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+// ── CORS — restrict to configured origins ──
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
+  .split(',').map(o => o.trim()).filter(Boolean);
 
-// Logging
-if (process.env.NODE_ENV === 'development') {
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow server-to-server / curl / Postman (no origin header)
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
+
+// Middleware
+app.use(helmet());
+app.use(compression());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ── Logging — only in non-production ──
+if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// Rate limiting
+// ── Global rate limiter ──
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-  message: 'Too many requests from this IP, please try again later.'
+  message: { success: false, message: 'Too many requests. Please try again later.' }
 });
-
 app.use('/api/', limiter);
 
-// Serve static files
-app.use('/receipts', express.static(path.join(__dirname, 'receipts')));
+// ── Serve receipt files — require valid JWT ──
+const receiptAuth = (req, res, next) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '') || (req.query.token || '');
+    if (!token) return res.status(401).send('Unauthorized');
+    jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).send('Unauthorized');
+  }
+};
+app.use('/receipts', receiptAuth, express.static(path.join(__dirname, 'receipts')));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));

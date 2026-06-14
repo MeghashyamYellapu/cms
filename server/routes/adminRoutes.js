@@ -4,20 +4,32 @@ const {
   getAdmins,
   createAdmin,
   updateAdmin,
-  deleteAdmin
+  deleteAdmin,
+  getMyAgents,
+  createAgent,
+  updateAgent,
+  deleteAgent
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middlewares/auth');
 
-// All routes require SuperAdmin role
 router.use(protect);
-router.use(authorize('WebsiteAdmin', 'SuperAdmin'));
 
+// Agent management routes (Admin only) — must be before /:id to avoid collision
+router.route('/agents')
+  .get(authorize('Admin'), getMyAgents)
+  .post(authorize('Admin'), createAgent);
+
+router.route('/agents/:id')
+  .put(authorize('Admin'), updateAgent)
+  .delete(authorize('Admin'), deleteAgent);
+
+// Admin management routes (WebsiteAdmin, SuperAdmin only)
 router.route('/')
-  .get(getAdmins)
-  .post(createAdmin);
+  .get(authorize('WebsiteAdmin', 'SuperAdmin'), getAdmins)
+  .post(authorize('WebsiteAdmin', 'SuperAdmin'), createAdmin);
 
 router.route('/:id')
-  .put(updateAdmin)
-  .delete(deleteAdmin);
+  .put(authorize('WebsiteAdmin', 'SuperAdmin'), updateAdmin)
+  .delete(authorize('WebsiteAdmin', 'SuperAdmin'), deleteAdmin);
 
 module.exports = router;

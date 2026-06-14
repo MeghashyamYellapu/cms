@@ -9,10 +9,11 @@ const {
   getBillStats,
   getRevenueTrend
 } = require('../controllers/billController');
-const { protect } = require('../middlewares/auth');
+const { protect, authorize } = require('../middlewares/auth');
 
-// All routes are protected
+// All routes are protected — Agents cannot access bills
 router.use(protect);
+router.use(authorize('WebsiteAdmin', 'SuperAdmin', 'Admin'));
 
 // Stats and analytics
 router.get('/stats', getBillStats);

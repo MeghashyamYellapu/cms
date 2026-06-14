@@ -55,7 +55,7 @@ const createAdmin = async () => {
     console.log('\n✅ Admin created successfully!\n');
     console.log('📧 Login Credentials:');
     console.log(`   Email: ${admin.email}`);
-    console.log(`   Password: ${password}`);
+    console.log(`   Password: (the password you just entered — not logged for security)`);
     console.log(`   Role: ${admin.role}`);
     console.log(`   Status: ${admin.status}\n`);
     console.log('🔐 You can now login with these credentials!');

@@ -420,18 +420,18 @@ const Reports = () => {
       {activeDetailView && (
         <div className="card">
           {/* Actions Bar */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+            <div>
               {activeDetailView === 'outstanding' && (
                 <div className="bg-red-50 border border-red-200 px-4 py-2 rounded-lg">
-                  <span className="text-red-800 font-medium">
+                  <span className="text-red-800 font-medium text-sm">
                     Total Outstanding: ₹{outstandingTotals.total.toLocaleString('en-IN')} ({outstandingTotals.count} bills)
                   </span>
                 </div>
               )}
               {activeDetailView === 'revenue' && (
                 <div className="bg-green-50 border border-green-200 px-4 py-2 rounded-lg">
-                  <span className="text-green-800 font-medium">
+                  <span className="text-green-800 font-medium text-sm">
                     Total Revenue: ₹{revenueTotals.total.toLocaleString('en-IN')} ({revenueTotals.transactions} transactions)
                   </span>
                 </div>
@@ -439,7 +439,7 @@ const Reports = () => {
             </div>
             <button
               onClick={exportDetailToExcel}
-              className="btn btn-success flex items-center gap-2"
+              className="btn btn-success flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <Download size={18} />
               Export to Excel
@@ -455,119 +455,195 @@ const Reports = () => {
 
           {/* Customer Ledger Table */}
           {activeDetailView === 'ledger' && !detailLoading && (
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Customer ID</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Area</th>
-                    <th>Service</th>
-                    <th>Package</th>
-                    <th>Balance</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detailData.map(customer => (
-                    <tr key={customer._id}>
-                      <td className="font-medium">{customer.customerId}</td>
-                      <td>{customer.name}</td>
-                      <td>{customer.phoneNumber}</td>
-                      <td>{customer.area}</td>
-                      <td><span className="badge badge-info">{customer.serviceType}</span></td>
-                      <td>₹{customer.packageAmount}</td>
-                      <td className={customer.previousBalance > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
-                        {customer.previousBalance > 0 ? `₹${customer.previousBalance}` : 'Clear'}
-                      </td>
-                      <td>
-                        <span className={`badge ${customer.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
-                          {customer.status}
-                        </span>
-                      </td>
+            <>
+              {/* Mobile Card View */}
+              <div className="block md:hidden space-y-3">
+                {detailData.map(customer => (
+                  <div key={customer._id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-semibold text-gray-900">{customer.name}</p>
+                        <p className="text-xs text-gray-500">{customer.customerId} • {customer.phoneNumber}</p>
+                      </div>
+                      <span className={`badge ${customer.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>{customer.status}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm mt-2">
+                      <span className="text-gray-500">Area: <span className="text-gray-800 font-medium">{customer.area}</span></span>
+                      <span className="text-gray-500">Service: <span className="badge badge-info text-xs">{customer.serviceType}</span></span>
+                      <span className="text-gray-500">Package: <span className="text-gray-800 font-medium">₹{customer.packageAmount}</span></span>
+                      <span className={customer.previousBalance > 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
+                        Balance: {customer.previousBalance > 0 ? `₹${customer.previousBalance}` : 'Clear'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop Table */}
+              <div className="hidden md:block table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Customer ID</th>
+                      <th>Name</th>
+                      <th>Phone</th>
+                      <th>Area</th>
+                      <th>Service</th>
+                      <th>Package</th>
+                      <th>Balance</th>
+                      <th>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {detailData.map(customer => (
+                      <tr key={customer._id}>
+                        <td className="font-medium">{customer.customerId}</td>
+                        <td>{customer.name}</td>
+                        <td>{customer.phoneNumber}</td>
+                        <td>{customer.area}</td>
+                        <td><span className="badge badge-info">{customer.serviceType}</span></td>
+                        <td>₹{customer.packageAmount}</td>
+                        <td className={customer.previousBalance > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+                          {customer.previousBalance > 0 ? `₹${customer.previousBalance}` : 'Clear'}
+                        </td>
+                        <td>
+                          <span className={`badge ${customer.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                            {customer.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           {/* Revenue Analysis Table */}
           {activeDetailView === 'revenue' && !detailLoading && (
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Transactions</th>
-                    <th>Amount Collected</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detailData.length > 0 ? detailData.map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="font-medium">{item._id}</td>
-                      <td>{item.count}</td>
-                      <td className="text-green-600 font-medium">₹{item.amount?.toLocaleString('en-IN')}</td>
-                    </tr>
-                  )) : (
+            <>
+              {/* Mobile Card View */}
+              <div className="block md:hidden space-y-3">
+                {detailData.length > 0 ? detailData.map((item, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex justify-between items-center">
+                    <div>
+                      <p className="font-semibold text-gray-900">{item._id}</p>
+                      <p className="text-xs text-gray-500">{item.count} transaction{item.count !== 1 ? 's' : ''}</p>
+                    </div>
+                    <p className="text-green-600 font-bold text-lg">₹{item.amount?.toLocaleString('en-IN')}</p>
+                  </div>
+                )) : (
+                  <div className="text-center py-12 text-gray-500">No revenue data for the selected period</div>
+                )}
+              </div>
+              {/* Desktop Table */}
+              <div className="hidden md:block table-container">
+                <table className="table">
+                  <thead>
                     <tr>
-                      <td colSpan="3" className="text-center py-8 text-gray-500">
-                        No revenue data for the selected period
-                      </td>
+                      <th>Date</th>
+                      <th>Transactions</th>
+                      <th>Amount Collected</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {detailData.length > 0 ? detailData.map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="font-medium">{item._id}</td>
+                        <td>{item.count}</td>
+                        <td className="text-green-600 font-medium">₹{item.amount?.toLocaleString('en-IN')}</td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan="3" className="text-center py-8 text-gray-500">
+                          No revenue data for the selected period
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           {/* Outstanding Dues Table */}
           {activeDetailView === 'outstanding' && !detailLoading && (
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Phone</th>
-                    <th>Period</th>
-                    <th>Total Payable</th>
-                    <th>Paid</th>
-                    <th>Remaining</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detailData.length > 0 ? detailData.map(bill => (
-                    <tr key={bill._id}>
-                      <td>
-                        <div>
-                          <p className="font-medium">{bill.customerId?.name || 'N/A'}</p>
-                          <p className="text-xs text-gray-500">{bill.customerId?.customerId}</p>
-                        </div>
-                      </td>
-                      <td>{bill.customerId?.phoneNumber || 'N/A'}</td>
-                      <td>{bill.month} {bill.year}</td>
-                      <td>₹{bill.totalPayable}</td>
-                      <td className="text-green-600">₹{bill.paidAmount}</td>
-                      <td className="text-red-600 font-medium">₹{bill.remainingBalance}</td>
-                      <td>
-                        <span className={`badge ${bill.status === 'Partial' ? 'badge-warning' : 'badge-danger'}`}>
-                          {bill.status}
-                        </span>
-                      </td>
-                    </tr>
-                  )) : (
+            <>
+              {/* Mobile Card View */}
+              <div className="block md:hidden space-y-3">
+                {detailData.length > 0 ? detailData.map(bill => (
+                  <div key={bill._id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-semibold text-gray-900">{bill.customerId?.name || 'N/A'}</p>
+                        <p className="text-xs text-gray-500">{bill.customerId?.customerId} • {bill.customerId?.phoneNumber}</p>
+                      </div>
+                      <span className={`badge ${bill.status === 'Partial' ? 'badge-warning' : 'badge-danger'}`}>{bill.status}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-sm mt-3 text-center">
+                      <div className="bg-white rounded-lg p-2">
+                        <p className="text-xs text-gray-500">Total</p>
+                        <p className="font-semibold text-gray-900">₹{bill.totalPayable}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2">
+                        <p className="text-xs text-gray-500">Paid</p>
+                        <p className="font-semibold text-green-600">₹{bill.paidAmount}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2">
+                        <p className="text-xs text-gray-500">Remaining</p>
+                        <p className="font-semibold text-red-600">₹{bill.remainingBalance}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2 text-center">{bill.month} {bill.year}</p>
+                  </div>
+                )) : (
+                  <div className="text-center py-12 text-gray-500">No outstanding dues! All bills are paid.</div>
+                )}
+              </div>
+              {/* Desktop Table */}
+              <div className="hidden md:block table-container">
+                <table className="table">
+                  <thead>
                     <tr>
-                      <td colSpan="7" className="text-center py-8 text-gray-500">
-                        No outstanding dues! All bills are paid.
-                      </td>
+                      <th>Customer</th>
+                      <th>Phone</th>
+                      <th>Period</th>
+                      <th>Total Payable</th>
+                      <th>Paid</th>
+                      <th>Remaining</th>
+                      <th>Status</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {detailData.length > 0 ? detailData.map(bill => (
+                      <tr key={bill._id}>
+                        <td>
+                          <div>
+                            <p className="font-medium">{bill.customerId?.name || 'N/A'}</p>
+                            <p className="text-xs text-gray-500">{bill.customerId?.customerId}</p>
+                          </div>
+                        </td>
+                        <td>{bill.customerId?.phoneNumber || 'N/A'}</td>
+                        <td>{bill.month} {bill.year}</td>
+                        <td>₹{bill.totalPayable}</td>
+                        <td className="text-green-600">₹{bill.paidAmount}</td>
+                        <td className="text-red-600 font-medium">₹{bill.remainingBalance}</td>
+                        <td>
+                          <span className={`badge ${bill.status === 'Partial' ? 'badge-warning' : 'badge-danger'}`}>
+                            {bill.status}
+                          </span>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan="7" className="text-center py-8 text-gray-500">
+                          No outstanding dues! All bills are paid.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}

@@ -68,38 +68,23 @@ const paymentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Auto-generate receipt ID before saving (Globally unique with retry)
+// Auto-generate receipt ID using an atomic counter — eliminates the race condition
 paymentSchema.pre('save', async function(next) {
   if (!this.receiptId || this.receiptId === '') {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const prefix = `RCP${year}${month}`;
-    
-    // Count all payments with this month's prefix for accurate numbering
-    const count = await mongoose.model('Payment').countDocuments({
-      receiptId: { $regex: `^${prefix}` }
-    });
-    
-    // Also find the highest receipt number to handle any gaps
-    const lastPayment = await mongoose.model('Payment')
-      .findOne({ receiptId: { $regex: `^${prefix}` } })
-      .sort({ createdAt: -1, _id: -1 })
-      .select('receiptId')
-      .lean();
-    
-    let nextNumber = count + 1;
-    
-    // If there's a last payment, ensure we're higher than its number
-    if (lastPayment && lastPayment.receiptId) {
-      const lastNumber = parseInt(lastPayment.receiptId.replace(prefix, ''), 10);
-      if (!isNaN(lastNumber) && lastNumber >= nextNumber) {
-        nextNumber = lastNumber + 1;
-      }
-    }
-    
-    // Format: RCP[YY][MM][sequence] - globally unique
-    this.receiptId = `${prefix}${String(nextNumber).padStart(6, '0')}`;
+
+    // Atomic increment — findOneAndUpdate with $inc is guaranteed unique under concurrent writes
+    const Counter = mongoose.model('Counter');
+    const counter = await Counter.findOneAndUpdate(
+      { _id: `receipt_${prefix}` },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
+    this.receiptId = `${prefix}${String(counter.seq).padStart(6, '0')}`;
   }
   next();
 });

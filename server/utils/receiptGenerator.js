@@ -76,7 +76,10 @@ exports.generateReceipt = async (payment) => {
 
     const customer = payment.customerId;
     const bill = payment.billId;
-    
+
+    // Escape HTML to prevent XSS if the receipt HTML is ever served directly
+    const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
     // Create HTML for the receipt
     const html = `
 <!DOCTYPE html>
@@ -307,14 +310,14 @@ exports.generateReceipt = async (payment) => {
   <div class="receipt">
     <div class="header">
       <div class="receipt-title">PAYMENT RECEIPT</div>
-      <div class="company-name">${companyInfo.name}</div>
-      <div class="company-contact">${companyInfo.address ? companyInfo.address + ' | ' : ''}Ofc: ${companyInfo.phone}</div>
+      <div class="company-name">${esc(companyInfo.name)}</div>
+      <div class="company-contact">${companyInfo.address ? esc(companyInfo.address) + ' | ' : ''}Ofc: ${esc(companyInfo.phone)}</div>
     </div>
     
     <div class="info-section">
       <div class="info-row">
         <span class="info-label">Customer Name</span>
-        <span class="info-value">${customer.name}</span>
+        <span class="info-value">${esc(customer.name)}</span>
       </div>
       <div class="info-row">
         <span class="info-label">Billing Period</span>
@@ -363,9 +366,9 @@ exports.generateReceipt = async (payment) => {
     
     <div class="footer">
       <div class="footer-text">
-        ${companyInfo.footer}
+        ${esc(companyInfo.footer)}
       </div>
-      <div class="collected-by">Collected by: ${payment.collectedBy.name}</div>
+      <div class="collected-by">Collected by: ${esc(payment.collectedBy.name)}</div>
       <div class="audit-badge">AUTHENTIC RECEIPT DIGITAL AUDIT LOG</div>
     </div>
   </div>

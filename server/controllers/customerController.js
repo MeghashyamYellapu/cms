@@ -7,16 +7,16 @@ const fs = require('fs');
 // Helper to add isolation filter
 const getIsolationFilter = (req) => {
   const filter = {};
-  
-  // Strict isolation for standard Admins
-  if (req.admin.role === 'Admin') {
+
+  if (req.admin.role === 'Agent') {
+      // Agent sees parent Admin's customers
+      filter.createdBy = req.admin.parentId;
+  } else if (req.admin.role === 'Admin') {
       filter.createdBy = req.admin._id;
-  } 
-  // SuperAdmins see everyone under their umbrella
-  else if (req.admin.role === 'SuperAdmin') {
+  } else if (req.admin.role === 'SuperAdmin') {
       filter.superAdminId = req.admin._id;
   }
-  
+
   return filter;
 };
 
@@ -34,14 +34,18 @@ exports.getCustomers = async (req, res) => {
       status = ''
     } = req.query;
 
+    // Escape regex metacharacters to prevent ReDoS
+    const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     // Build query with isolation
     const query = { ...getIsolationFilter(req) };
 
     if (search) {
+      const safeSearch = escapeRegex(search.slice(0, 100)); // also cap length
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { phoneNumber: { $regex: search, $options: 'i' } },
-        { customerId: { $regex: search, $options: 'i' } }
+        { name: { $regex: safeSearch, $options: 'i' } },
+        { phoneNumber: { $regex: safeSearch, $options: 'i' } },
+        { customerId: { $regex: safeSearch, $options: 'i' } }
       ];
     }
 
@@ -57,12 +61,15 @@ exports.getCustomers = async (req, res) => {
       query.status = status;
     }
 
+    // Cap limit to prevent full-collection dumps
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
+
     // Execute query with pagination
     const customers = await Customer.find(query)
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .limit(safeLimit)
+      .skip((parseInt(page) - 1) * safeLimit)
       .lean();
 
     // Mask Aadhaar numbers
@@ -82,7 +89,7 @@ exports.getCustomers = async (req, res) => {
       pagination: {
         total: count,
         page: parseInt(page),
-        pages: Math.ceil(count / limit)
+        pages: Math.ceil(count / safeLimit)
       }
     });
   } catch (error) {
@@ -90,7 +97,7 @@ exports.getCustomers = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -124,7 +131,7 @@ exports.getCustomer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -134,21 +141,23 @@ exports.getCustomer = async (req, res) => {
 // @access  Private
 exports.createCustomer = async (req, res) => {
   try {
+    // Pre-flight duplicate phone check (scoped to this admin) — gives a clear error before hitting the index
+    if (req.body.phoneNumber) {
+      const scopeFilter = getIsolationFilter(req);
+      const existing = await Customer.findOne({ phoneNumber: req.body.phoneNumber, ...scopeFilter }).lean();
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: 'A customer with this phone number already exists'
+        });
+      }
+    }
+
     const customerData = {
       ...req.body,
       createdBy: req.admin._id,
-      superAdminId: req.superAdminId || req.admin._id // If WebsiteAdmin (null superAdminId), they own it
+      superAdminId: req.superAdminId || req.admin._id
     };
-
-    // Check duplicate phone within the same SuperAdmin scope?
-    // Usually phone numbers should be unique to the system or unique to the SuperAdmin?
-    // Let's enforce uniqueness globally to avoid confusion, or scoped.
-    // User asked "seperate theirs customers with others".
-    // So uniqueness should be SCOPED. Two SuperAdmins can have same phone number customer?
-    // Probably yes.
-    // BUT, the schema might have unique index on phoneNumber. 
-    // I need to check Schema. If it's unique global, we have a problem.
-    // I will check schema later. For now assuming global unique.
 
     const customer = await Customer.create(customerData);
 
@@ -177,7 +186,7 @@ exports.createCustomer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -224,7 +233,7 @@ exports.updateCustomer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -271,7 +280,7 @@ exports.deleteCustomer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -440,7 +449,7 @@ exports.bulkUpload = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error during bulk upload',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -494,7 +503,7 @@ exports.getCustomerStats = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -516,7 +525,7 @@ exports.getAreas = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };

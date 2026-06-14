@@ -7,9 +7,10 @@ const {
   changePassword
 } = require('../controllers/authController');
 const { protect } = require('../middlewares/auth');
+const { loginLimiter } = require('../middlewares/rateLimiters');
 
-// Public routes
-router.post('/login', login);
+// Public routes — login has its own tight rate limit
+router.post('/login', loginLimiter, login);
 
 // Protected routes
 router.get('/me', protect, getMe);

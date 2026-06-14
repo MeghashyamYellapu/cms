@@ -28,11 +28,10 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5242880 }, // 5MB
   fileFilter: function (req, file, cb) {
-    const filetypes = /xlsx|xls|csv/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    
-    // Check mime type more loosely or strictly for common excel types
-    const excelMimes = [
+    const allowedExt = /\.(xlsx|xls|csv)$/i;
+    const extname = allowedExt.test(path.extname(file.originalname));
+
+    const allowedMimes = [
       'application/vnd.ms-excel',
       'application/msexcel',
       'application/x-msexcel',
@@ -47,16 +46,15 @@ const upload = multer({
       'text/x-csv',
       'application/x-csv',
       'text/comma-separated-values',
-      'text/x-comma-separated-values'
+      'text/x-comma-separated-values',
+      'application/octet-stream' // some OS/browsers send this for xlsx
     ];
-    
-    const mimetype = excelMimes.includes(file.mimetype);
+    const mimetype = allowedMimes.includes(file.mimetype);
 
-    // If extension sends check but mimetype is weird (sometimes happens), trust extension if octet-stream
-    if (extname) {
+    if (extname && mimetype) {
       return cb(null, true);
     } else {
-      cb(new Error('Only Excel files are allowed'));
+      cb(new Error('Only Excel (.xlsx, .xls) or CSV files are allowed'));
     }
   }
 });
@@ -68,17 +66,17 @@ router.use(protect);
 router.get('/stats', getCustomerStats);
 router.get('/areas', getAreas);
 
-// Bulk upload
-router.post('/bulk-upload', upload.single('file'), bulkUpload);
+// Bulk upload (Agent cannot upload)
+router.post('/bulk-upload', authorize('WebsiteAdmin', 'SuperAdmin', 'Admin'), upload.single('file'), bulkUpload);
 
 // CRUD operations
 router.route('/')
   .get(getCustomers)
-  .post(createCustomer);
+  .post(authorize('WebsiteAdmin', 'SuperAdmin', 'Admin'), createCustomer);
 
 router.route('/:id')
   .get(getCustomer)
-  .put(updateCustomer)
-  .delete(authorize('SuperAdmin'), deleteCustomer);
+  .put(authorize('WebsiteAdmin', 'SuperAdmin', 'Admin'), updateCustomer)
+  .delete(authorize('WebsiteAdmin', 'SuperAdmin'), deleteCustomer);
 
 module.exports = router;

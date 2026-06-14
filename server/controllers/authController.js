@@ -8,18 +8,35 @@ const { logAudit } = require('../middlewares/auditLog');
 // @access  Public
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    // Accept either `identifier` (new) or `email` (legacy) field
+    const identifier = (req.body.identifier || req.body.email || '').trim();
+    const { password } = req.body;
 
     // Validate input
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide email and password'
+        message: 'Please provide your email or phone number and password'
       });
     }
 
-    // Find admin with password field
-    const admin = await Admin.findOne({ email }).select('+password');
+    // Detect whether the identifier looks like an email or a phone number
+    const isPhone = /^[6-9]\d{9}$/.test(identifier);
+    const isEmail = identifier.includes('@');
+
+    if (!isPhone && !isEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid email address or 10-digit phone number'
+      });
+    }
+
+    // Find admin by email OR phone number
+    const query = isPhone
+      ? { phoneNumber: identifier }
+      : { email: identifier.toLowerCase() };
+
+    const admin = await Admin.findOne(query).select('+password');
 
     if (!admin) {
       return res.status(401).json({
@@ -84,7 +101,7 @@ exports.login = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error during login',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -96,11 +113,12 @@ exports.getMe = async (req, res) => {
   try {
     const admin = await Admin.findById(req.admin._id);
 
-    // Ensure companyDetails is present (even if empty) for consistency
     const adminData = admin.toObject();
     if (!adminData.companyDetails) {
-        adminData.companyDetails = {};
+      adminData.companyDetails = {};
     }
+    // Never expose password hash (already excluded by toJSON, but belt-and-suspenders)
+    delete adminData.password;
 
     res.status(200).json({
       success: true,
@@ -111,7 +129,7 @@ exports.getMe = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -140,7 +158,7 @@ exports.logout = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error during logout',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -184,7 +202,7 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };

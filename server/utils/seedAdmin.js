@@ -29,7 +29,7 @@ const seedSuperAdmin = async () => {
       process.exit(0);
     }
 
-    // Create super admin
+    // Create super admin — default password is intentionally weak for first-boot only
     const superAdmin = await Admin.create({
       name: 'Super Admin',
       email: 'admin@cableoperator.com',
@@ -41,8 +41,11 @@ const seedSuperAdmin = async () => {
     console.log('✅ Super Admin created successfully!');
     console.log('\n📧 Login Credentials:');
     console.log(`   Email: ${superAdmin.email}`);
-    console.log(`   Password: Admin@123`);
-    console.log('\n⚠️  IMPORTANT: Change the password after first login!');
+    console.log('   Password: Admin@123');
+    console.log('\n🚨 SECURITY WARNING:');
+    console.log('   The default password "Admin@123" is publicly known.');
+    console.log('   Log in immediately and change it before putting this system into production.');
+    console.log('   Failure to do so will expose your system to unauthorised access.');
     
     process.exit(0);
   } catch (error) {

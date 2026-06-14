@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { customerAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Users,
   Plus,
@@ -29,6 +30,7 @@ import * as Yup from 'yup';
 
 const Customers = () => {
   const navigate = useNavigate();
+  const { isAgent } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -209,26 +211,28 @@ const Customers = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Customers</h1>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage your customer database</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => setShowBulkModal(true)}
-            className="btn btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto"
-          >
-            <Upload size={20} />
-            <span className="text-sm sm:text-base">Bulk Upload</span>
-          </button>
-          <button
-            onClick={() => {
-              setSelectedCustomer(null);
-              formik.resetForm();
-              setShowAddModal(true);
-            }}
-            className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
-          >
-            <Plus size={20} />
-            <span className="text-sm sm:text-base">Add Customer</span>
-          </button>
-        </div>
+        {!isAgent && (
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => setShowBulkModal(true)}
+              className="btn btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto"
+            >
+              <Upload size={20} />
+              <span className="text-sm sm:text-base">Bulk Upload</span>
+            </button>
+            <button
+              onClick={() => {
+                setSelectedCustomer(null);
+                formik.resetForm();
+                setShowAddModal(true);
+              }}
+              className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
+            >
+              <Plus size={20} />
+              <span className="text-sm sm:text-base">Add Customer</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -351,7 +355,7 @@ const Customers = () => {
                     <th className="whitespace-nowrap">Package</th>
                     <th className="whitespace-nowrap">Balance</th>
                     <th className="whitespace-nowrap">Status</th>
-                    <th className="whitespace-nowrap">Actions</th>
+                    {!isAgent && <th className="whitespace-nowrap">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -377,24 +381,26 @@ const Customers = () => {
                           {customer.status}
                         </span>
                       </td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleEdit(customer); }}
-                            className="text-blue-600 hover:text-blue-800 p-1"
-                            title="Edit"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDelete(customer._id); }}
-                            className="text-red-600 hover:text-red-800 p-1"
-                            title="Delete"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
+                      {!isAgent && (
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleEdit(customer); }}
+                              className="text-blue-600 hover:text-blue-800 p-1"
+                              title="Edit"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDelete(customer._id); }}
+                              className="text-red-600 hover:text-red-800 p-1"
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

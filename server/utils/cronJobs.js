@@ -1,4 +1,6 @@
 const cron = require('node-cron');
+const fs = require('fs');
+const path = require('path');
 const Customer = require('../models/Customer');
 const Bill = require('../models/Bill');
 
@@ -22,8 +24,8 @@ exports.initCronJobs = () => {
 
       console.log(`Generating bills for ${month} ${year}`);
 
-      // Get all active customers
-      const customers = await Customer.find({ status: 'Active' });
+      // Get all active customers with their ownership fields
+      const customers = await Customer.find({ status: 'Active' }).select('+createdBy +superAdminId');
       
       let successCount = 0;
       let errorCount = 0;
@@ -46,14 +48,16 @@ exports.initCronJobs = () => {
           // Calculate total payable
           const totalPayable = customer.packageAmount + customer.previousBalance;
 
-          // Create bill
+          // Create bill — stamp with customer's ownership so it appears in the right admin's view
           await Bill.create({
             customerId: customer._id,
             month,
             year,
             packageAmount: customer.packageAmount,
-            previousBalance: customer.previousBalance, // Snapshot of balance BEFORE this month
-            totalPayable
+            previousBalance: customer.previousBalance,
+            totalPayable,
+            generatedBy: customer.createdBy,
+            superAdminId: customer.superAdminId
           });
 
           // Update customer's outstanding balance to include this new bill amount
@@ -77,6 +81,32 @@ exports.initCronJobs = () => {
     }
   });
 
+  // Purge receipt files older than 30 days — runs daily at 02:00 AM
+  cron.schedule('0 2 * * *', () => {
+    try {
+      const receiptsDir = path.join(__dirname, '../receipts');
+      if (!fs.existsSync(receiptsDir)) return;
+
+      const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      let purged = 0;
+      for (const file of fs.readdirSync(receiptsDir)) {
+        const filePath = path.join(receiptsDir, file);
+        try {
+          const { mtimeMs } = fs.statSync(filePath);
+          if (mtimeMs < cutoff) {
+            fs.unlinkSync(filePath);
+            purged++;
+          }
+        } catch (e) {
+          console.error(`Failed to delete receipt file ${file}:`, e.message);
+        }
+      }
+      if (purged > 0) console.log(`🗑️  Purged ${purged} receipt file(s) older than 30 days`);
+    } catch (error) {
+      console.error('Receipt cleanup error:', error);
+    }
+  });
+
   console.log('✅ Cron jobs initialized');
 };
 
@@ -88,8 +118,8 @@ exports.triggerMonthlyBilling = async () => {
   const month = now.toLocaleString('en-US', { month: 'long' });
   const year = now.getFullYear();
 
-  const customers = await Customer.find({ status: 'Active' });
-  
+  const customers = await Customer.find({ status: 'Active' }).select('+createdBy +superAdminId');
+
   const results = {
     success: [],
     errors: [],
@@ -120,7 +150,9 @@ exports.triggerMonthlyBilling = async () => {
         year,
         packageAmount: customer.packageAmount,
         previousBalance: customer.previousBalance,
-        totalPayable
+        totalPayable,
+        generatedBy: customer.createdBy,
+        superAdminId: customer.superAdminId
       });
 
       results.success.push({

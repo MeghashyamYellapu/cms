@@ -15,6 +15,11 @@ const adminSchema = new mongoose.Schema({
     trim: true,
     match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
   },
+  phoneNumber: {
+    type: String,
+    trim: true,
+    match: [/^[6-9]\d{9}$/, 'Please provide a valid 10-digit phone number']
+  },
   password: {
     type: String,
     required: [true, 'Password is required'],
@@ -23,7 +28,7 @@ const adminSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['WebsiteAdmin', 'SuperAdmin', 'Admin'],
+    enum: ['WebsiteAdmin', 'SuperAdmin', 'Admin', 'Agent'],
     default: 'Admin'
   },
   parentId: {
@@ -59,6 +64,9 @@ const adminSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Unique phone number when present (sparse allows null/undefined to not conflict)
+adminSchema.index({ phoneNumber: 1 }, { unique: true, sparse: true });
 
 // Hash password before saving
 adminSchema.pre('save', async function(next) {

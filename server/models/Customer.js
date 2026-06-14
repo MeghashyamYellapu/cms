@@ -104,21 +104,26 @@ const customerSchema = new mongoose.Schema({
 customerSchema.index({ customerId: 1, createdBy: 1 }, { unique: true });
 customerSchema.index({ phoneNumber: 1, createdBy: 1 }, { unique: true });
 
-// Auto-generate customerId before saving
+// Auto-generate customerId using an atomic counter — eliminates the race condition
 customerSchema.pre('save', async function(next) {
   if (!this.customerId || this.customerId === '') {
-    const count = await mongoose.model('Customer').countDocuments({ createdBy: this.createdBy });
-    this.customerId = `CUST${String(count + 1).padStart(6, '0')}`;
+    const Counter = mongoose.model('Counter');
+    const counter = await Counter.findOneAndUpdate(
+      { _id: `customer_${this.createdBy}` },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    this.customerId = `CUST${String(counter.seq).padStart(6, '0')}`;
   }
-  
-  // Encrypt Aadhaar number if present
+
+  // Encrypt Aadhaar number if present — key is validated at startup
   if (this.isModified('aadhaarNumber') && this.aadhaarNumber) {
     this.aadhaarNumber = CryptoJS.AES.encrypt(
       this.aadhaarNumber,
-      process.env.ENCRYPTION_KEY || 'default-key-change-this'
+      process.env.ENCRYPTION_KEY
     ).toString();
   }
-  
+
   next();
 });
 

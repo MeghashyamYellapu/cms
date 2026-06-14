@@ -125,7 +125,7 @@ exports.generateMonthlyBills = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -151,12 +151,14 @@ exports.getBills = async (req, res) => {
     if (status) query.status = status;
     if (customerId) query.customerId = customerId;
 
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
+
     const bills = await Bill.find(query)
       .populate('customerId', 'customerId name phoneNumber area serviceType')
       .populate('generatedBy', 'name')
       .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .limit(safeLimit)
+      .skip((parseInt(page) - 1) * safeLimit);
 
     const count = await Bill.countDocuments(query);
 
@@ -166,7 +168,7 @@ exports.getBills = async (req, res) => {
       pagination: {
         total: count,
         page: parseInt(page),
-        pages: Math.ceil(count / limit)
+        pages: Math.ceil(count / safeLimit)
       }
     });
   } catch (error) {
@@ -174,7 +176,7 @@ exports.getBills = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -205,7 +207,7 @@ exports.getBill = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -233,7 +235,7 @@ exports.getCustomerBills = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -255,7 +257,8 @@ exports.updateBill = async (req, res) => {
       });
     }
 
-    if (status) bill.status = status;
+    // Only allow adjusting paidAmount — the pre-save hook recalculates status and remainingBalance
+    // to keep them consistent. Direct status override bypasses that and corrupts data.
     if (paidAmount !== undefined) bill.paidAmount = paidAmount;
 
     await bill.save();
@@ -270,7 +273,7 @@ exports.updateBill = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -325,7 +328,7 @@ exports.getBillStats = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -367,7 +370,7 @@ exports.getRevenueTrend = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };

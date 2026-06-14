@@ -10,7 +10,10 @@ const Settings = require('../models/Settings');
 // Helper to add isolation filter for PAYMENTS
 const getIsolationFilter = (req) => {
   const filter = {};
-  if (req.admin.role === 'Admin') {
+  if (req.admin.role === 'Agent') {
+     // Agent sees only payments they personally collected
+     filter.collectedBy = req.admin._id;
+  } else if (req.admin.role === 'Admin') {
      filter.collectedBy = req.admin._id;
   } else if (req.admin.role === 'SuperAdmin') {
      filter.superAdminId = req.admin._id;
@@ -40,9 +43,24 @@ exports.recordPayment = async (req, res) => {
       });
     }
 
+    const numericAmount = Number(paidAmount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Payment amount must be greater than zero' });
+    }
+    const MAX_PAYMENT = 100000; // ₹1,00,000 per payment
+    if (numericAmount > MAX_PAYMENT) {
+      return res.status(400).json({
+        success: false,
+        message: `Payment amount cannot exceed ₹${MAX_PAYMENT.toLocaleString('en-IN')}`
+      });
+    }
+
     // Get customer using isolation filter (Manual logic as Customer != Payment)
     const customerQuery = { _id: customerId };
-    if (req.admin.role === 'Admin') {
+    if (req.admin.role === 'Agent') {
+       // Agent can only record payments for parent Admin's customers
+       customerQuery.createdBy = req.admin.parentId;
+    } else if (req.admin.role === 'Admin') {
        customerQuery.createdBy = req.admin._id;
     } else if (req.admin.role === 'SuperAdmin') {
        customerQuery.superAdminId = req.admin._id;
@@ -50,7 +68,8 @@ exports.recordPayment = async (req, res) => {
 
     const customer = await Customer.findOne(customerQuery);
 
-    const bill = await Bill.findById(billId);
+    // Verify bill belongs to this customer (prevents cross-tenant bill access)
+    const bill = await Bill.findOne({ _id: billId, customerId: customer._id });
 
     if (!customer) {
       return res.status(404).json({
@@ -85,6 +104,8 @@ exports.recordPayment = async (req, res) => {
          // If normal Admin (potentially orphaned legacy admin), assign to self or parent
          else if (req.admin.role === 'Admin') {
              customer.superAdminId = req.admin.parentId || req.admin._id;
+         } else if (req.admin.role === 'Agent') {
+             customer.superAdminId = req.admin.parentId;
          }
        }
        // Save the customer immediately to persist the fix
@@ -166,7 +187,7 @@ exports.recordPayment = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -196,13 +217,15 @@ exports.getPayments = async (req, res) => {
       if (endDate) query.paymentDate.$lte = new Date(endDate);
     }
 
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
+
     const payments = await Payment.find(query)
       .populate('customerId', 'customerId name phoneNumber area serviceType')
       .populate('billId', 'month year totalPayable previousBalance')
       .populate('collectedBy', 'name')
       .sort({ paymentDate: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .limit(safeLimit)
+      .skip((parseInt(page) - 1) * safeLimit);
 
     const count = await Payment.countDocuments(query);
 
@@ -212,7 +235,7 @@ exports.getPayments = async (req, res) => {
       pagination: {
         total: count,
         page: parseInt(page),
-        pages: Math.ceil(count / limit)
+        pages: Math.ceil(count / safeLimit)
       }
     });
   } catch (error) {
@@ -220,7 +243,7 @@ exports.getPayments = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -252,7 +275,7 @@ exports.getPayment = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -277,7 +300,7 @@ exports.getCustomerPayments = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -338,7 +361,7 @@ exports.resendReceipt = async (req, res) => {
       res.status(500).json({
         success: false,
         message: 'Failed to send WhatsApp receipt',
-        error: whatsappResult.error
+        ...(process.env.NODE_ENV !== 'production' && { error: whatsappResult.error })
       });
     }
   } catch (error) {
@@ -346,7 +369,7 @@ exports.resendReceipt = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -421,7 +444,7 @@ exports.getPaymentStats = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -485,7 +508,7 @@ exports.downloadReceipt = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
@@ -554,7 +577,7 @@ exports.sendReceiptBoth = async (req, res) => {
         results.whatsapp = {
           success: false,
           status: 'Failed',
-          error: error.message
+          ...(process.env.NODE_ENV !== 'production' && { error: error.message })
         };
         payment.whatsappStatus = 'Failed';
       }
@@ -598,7 +621,7 @@ exports.sendReceiptBoth = async (req, res) => {
         results.sms = {
           success: false,
           status: 'Failed',
-          error: error.message
+          ...(process.env.NODE_ENV !== 'production' && { error: error.message })
         };
         payment.smsStatus = 'Failed';
       }
@@ -635,7 +658,7 @@ exports.sendReceiptBoth = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };

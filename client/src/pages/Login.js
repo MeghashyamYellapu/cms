@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Phone, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,13 +14,18 @@ const Login = () => {
 
   const formik = useFormik({
     initialValues: {
-      email: '',
+      identifier: '',
       password: '',
     },
     validationSchema: Yup.object({
-      email: Yup.string()
-        .email('Invalid email address')
-        .required('Email is required'),
+      identifier: Yup.string()
+        .required('Email or phone number is required')
+        .test('email-or-phone', 'Enter a valid email or 10-digit phone number', (value) => {
+          if (!value) return false;
+          const isEmail = /\S+@\S+\.\S+/.test(value);
+          const isPhone = /^[6-9]\d{9}$/.test(value);
+          return isEmail || isPhone;
+        }),
       password: Yup.string()
         .min(6, 'Password must be at least 6 characters')
         .required('Password is required'),
@@ -32,7 +37,8 @@ const Login = () => {
 
       if (result.success) {
         toast.success('Login successful!');
-        navigate('/dashboard');
+        const stored = JSON.parse(localStorage.getItem('admin') || '{}');
+        navigate(stored.role === 'Agent' ? '/customers' : '/dashboard');
       } else {
         toast.error(result.message || 'Login failed');
       }
@@ -40,47 +46,50 @@ const Login = () => {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-violet-50 px-4 py-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
-            <Lock className="text-white" size={32} />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl mb-4 shadow-lg shadow-indigo-200">
+            <Lock className="text-white" size={28} />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             Cable Billing System
           </h1>
-          <p className="text-gray-600">Sign in to manage your cable operations</p>
+          <p className="text-gray-500 text-sm sm:text-base">Sign in to manage your cable operations</p>
         </div>
 
         {/* Login Form */}
-        <div className="card">
+        <div className="card shadow-xl border-gray-100">
           <form onSubmit={formik.handleSubmit} className="space-y-6">
-            {/* Email */}
+            {/* Email or Phone */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
+                Email or Phone Number
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="text-gray-400" size={20} />
+                  {/^[6-9]\d*$/.test(formik.values.identifier) && formik.values.identifier.length > 0
+                    ? <Phone className="text-gray-400" size={20} />
+                    : <Mail className="text-gray-400" size={20} />}
                 </div>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="identifier"
+                  name="identifier"
+                  type="text"
+                  autoComplete="username"
+                  inputMode={/^[6-9]/.test(formik.values.identifier) ? 'numeric' : 'email'}
                   className={`input pl-10 ${
-                    formik.touched.email && formik.errors.email
+                    formik.touched.identifier && formik.errors.identifier
                       ? 'border-red-500 focus:ring-red-500'
                       : ''
                   }`}
-                  placeholder="admin@example.com"
-                  {...formik.getFieldProps('email')}
+                  placeholder="admin@example.com or 9876543210"
+                  {...formik.getFieldProps('identifier')}
                 />
               </div>
-              {formik.touched.email && formik.errors.email && (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
+              {formik.touched.identifier && formik.errors.identifier && (
+                <p className="mt-1 text-sm text-red-600">{formik.errors.identifier}</p>
               )}
             </div>
 
