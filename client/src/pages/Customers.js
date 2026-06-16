@@ -23,7 +23,8 @@ import {
   IndianRupee,
   User,
   FileText,
-  ChevronRight
+  ChevronRight,
+  History
 } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -715,6 +716,14 @@ const Customers = () => {
                 <Download size={20} />
                 Download Sample Template
               </button>
+
+              <button
+                onClick={() => { setShowBulkModal(false); navigate('/bulk-upload-history'); }}
+                className="btn btn-secondary w-full flex items-center justify-center gap-2"
+              >
+                <History size={20} />
+                View Upload History
+              </button>
             </div>
           </div>
         </div>
@@ -915,7 +924,7 @@ const Customers = () => {
                 <CreditCard size={20} />
                 <span>Record Payment</span>
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setShowDetailsModal(false);
                   handleEdit(viewCustomer);
@@ -925,7 +934,19 @@ const Customers = () => {
                 <Edit size={20} />
                 <span>Edit Customer</span>
               </button>
-              <button 
+              {!isAgent && (
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    handleDelete(viewCustomer._id);
+                  }}
+                  className="btn btn-secondary sm:w-auto flex items-center justify-center gap-2 text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 size={20} />
+                  <span>Delete</span>
+                </button>
+              )}
+              <button
                 onClick={() => { setShowDetailsModal(false); setViewCustomer(null); }}
                 className="btn btn-secondary sm:w-auto"
               >

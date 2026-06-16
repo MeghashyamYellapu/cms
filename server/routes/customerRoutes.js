@@ -9,6 +9,8 @@ const {
   updateCustomer,
   deleteCustomer,
   bulkUpload,
+  getBulkUploads,
+  getBulkUploadDetail,
   getCustomerStats,
   getAreas
 } = require('../controllers/customerController');
@@ -68,6 +70,8 @@ router.get('/areas', getAreas);
 
 // Bulk upload (Agent cannot upload)
 router.post('/bulk-upload', authorize('WebsiteAdmin', 'SuperAdmin', 'Admin'), upload.single('file'), bulkUpload);
+router.get('/bulk-uploads', authorize('WebsiteAdmin', 'SuperAdmin', 'Admin'), getBulkUploads);
+router.get('/bulk-uploads/:uploadId', authorize('WebsiteAdmin', 'SuperAdmin', 'Admin'), getBulkUploadDetail);
 
 // CRUD operations
 router.route('/')
@@ -77,6 +81,6 @@ router.route('/')
 router.route('/:id')
   .get(getCustomer)
   .put(authorize('WebsiteAdmin', 'SuperAdmin', 'Admin'), updateCustomer)
-  .delete(authorize('WebsiteAdmin', 'SuperAdmin'), deleteCustomer);
+  .delete(authorize('WebsiteAdmin', 'SuperAdmin', 'Admin'), deleteCustomer);
 
 module.exports = router;

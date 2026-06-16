@@ -16,6 +16,7 @@ import Payments from './pages/Payments';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Admins from './pages/Admins';
+import BulkUploadHistory from './pages/BulkUploadHistory';
 import CustomerPortal from './pages/CustomerPortal';
 
 import LandingPage from './pages/LandingPage';
@@ -88,6 +89,7 @@ function App() {
                         <Route path="/dashboard" element={<DashboardWrapper />} />
                         <Route path="/admins" element={<AgentGuard><Admins /></AgentGuard>} />
                         <Route path="/customers" element={<Customers />} />
+                        <Route path="/bulk-upload-history" element={<AgentGuard><BulkUploadHistory /></AgentGuard>} />
                         <Route path="/bills" element={<AgentGuard><Bills /></AgentGuard>} />
                         <Route path="/payments" element={<Payments />} />
                         <Route path="/reports" element={<AgentGuard><Reports /></AgentGuard>} />

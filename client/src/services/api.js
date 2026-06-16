@@ -107,6 +107,8 @@ export const customerAPI = {
   bulkUpload: (formData) => api.post('/customers/bulk-upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
+  getBulkUploads: (params) => api.get('/customers/bulk-uploads', { params }),
+  getBulkUploadDetail: (id) => api.get(`/customers/bulk-uploads/${id}`),
   getStats: () => api.get('/customers/stats'),
   getAreas: () => api.get('/customers/areas'),
 };

@@ -1,5 +1,7 @@
 const Customer = require('../models/Customer');
 const Bill = require('../models/Bill');
+const Payment = require('../models/Payment');
+const BulkUpload = require('../models/BulkUpload');
 const { logAudit } = require('../middlewares/auditLog');
 const xlsx = require('xlsx');
 const fs = require('fs');
@@ -253,16 +255,18 @@ exports.deleteCustomer = async (req, res) => {
       });
     }
 
-    // Check if customer has bills
-    const billCount = await Bill.countDocuments({ customerId: customer._id });
+    // Only block deletion if real money has changed hands — preserve that financial audit trail.
+    // Unpaid/partial bills carry no payment history, so they're safe to cascade-delete.
+    const paymentCount = await Payment.countDocuments({ customerId: customer._id });
 
-    if (billCount > 0) {
+    if (paymentCount > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Cannot delete customer with existing bills. Deactivate instead.'
+        message: 'Cannot delete customer with recorded payments. Deactivate instead.'
       });
     }
 
+    await Bill.deleteMany({ customerId: customer._id });
     await customer.deleteOne();
 
     // Log audit
@@ -352,10 +356,11 @@ exports.bulkUpload = async (req, res) => {
         if (!row.serviceType) {
           errors.push('Service type is required');
         } else {
-           // Normalize Service Type Case
-           const st = row.serviceType.toString().toUpperCase();
-           if (['SDV', 'APSFL', 'RAILWIRE'].includes(st)) {
-               row.serviceType = st;
+           // Case-insensitive match against the schema's exact enum casing
+           const st = row.serviceType.toString().trim().toUpperCase();
+           const serviceTypeMap = { SDV: 'SDV', APSFL: 'APSFL', RAILWIRE: 'RailWire' };
+           if (serviceTypeMap[st]) {
+               row.serviceType = serviceTypeMap[st];
            } else {
                errors.push('Service type must be SDV, APSFL, or RailWire');
            }
@@ -373,6 +378,17 @@ exports.bulkUpload = async (req, res) => {
              const amt = parseFloat(row.packageAmount);
              if (isNaN(amt) || amt < 0) errors.push('Package amount must be valid');
              else row.packageAmount = amt;
+        }
+
+        if (row.status) {
+           // Case-insensitive match against the schema's exact enum casing
+           const statusMap = { ACTIVE: 'Active', INACTIVE: 'Inactive' };
+           const normalizedStatus = statusMap[row.status.toString().trim().toUpperCase()];
+           if (normalizedStatus) {
+               row.status = normalizedStatus;
+           } else {
+               errors.push('Status must be Active or Inactive');
+           }
         }
 
         if (errors.length > 0) {
@@ -412,7 +428,8 @@ exports.bulkUpload = async (req, res) => {
         results.success.push({
           row: rowNumber,
           customerId: customer.customerId,
-          name: customer.name
+          name: customer.name,
+          phoneNumber: customer.phoneNumber
         });
       } catch (error) {
         results.errors.push({
@@ -426,8 +443,21 @@ exports.bulkUpload = async (req, res) => {
     // Delete uploaded file
     fs.unlinkSync(req.file.path);
 
+    // Persist the full upload record so it can be reviewed later in the history dashboard
+    const bulkUploadRecord = await BulkUpload.create({
+      fileName: req.file.originalname,
+      uploadedBy: req.admin._id,
+      createdBy: req.admin._id,
+      superAdminId: currentSuperAdminId,
+      totalRows: data.length,
+      successCount: results.success.length,
+      errorCount: results.errors.length,
+      successDetails: results.success,
+      errorDetails: results.errors
+    });
+
     // Log audit
-    await logAudit(req, 'BULK_UPLOAD', 'Customer', null, {
+    await logAudit(req, 'BULK_UPLOAD', 'Customer', bulkUploadRecord._id, {
       totalRows: data.length,
       successCount: results.success.length,
       errorCount: results.errors.length
@@ -436,7 +466,8 @@ exports.bulkUpload = async (req, res) => {
     res.status(200).json({
       success: true,
       message: `Bulk upload completed. ${results.success.length} customers created, ${results.errors.length} errors.`,
-      data: results
+      data: results,
+      uploadId: bulkUploadRecord._id
     });
   } catch (error) {
     console.error('Bulk upload error:', error);
@@ -449,6 +480,68 @@ exports.bulkUpload = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error during bulk upload',
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
+    });
+  }
+};
+
+// @desc    Get bulk upload history (list, no row-level detail)
+// @route   GET /api/customers/bulk-uploads
+// @access  Private
+exports.getBulkUploads = async (req, res) => {
+  try {
+    const filter = getIsolationFilter(req);
+    const { page = 1, limit = 20 } = req.query;
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
+    const skip = (Math.max(parseInt(page) || 1, 1) - 1) * safeLimit;
+
+    const uploads = await BulkUpload.find(filter)
+      .populate('uploadedBy', 'name email role')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
+      .select('-successDetails -errorDetails');
+
+    const total = await BulkUpload.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: uploads,
+      pagination: {
+        total,
+        page: parseInt(page) || 1,
+        pages: Math.ceil(total / safeLimit)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      ...(process.env.NODE_ENV !== 'production' && { error: error.message })
+    });
+  }
+};
+
+// @desc    Get full per-row detail for a single bulk upload
+// @route   GET /api/customers/bulk-uploads/:uploadId
+// @access  Private
+exports.getBulkUploadDetail = async (req, res) => {
+  try {
+    const filter = { ...getIsolationFilter(req), _id: req.params.uploadId };
+    const upload = await BulkUpload.findOne(filter).populate('uploadedBy', 'name email role');
+
+    if (!upload) {
+      return res.status(404).json({
+        success: false,
+        message: 'Upload record not found (or access denied)'
+      });
+    }
+
+    res.status(200).json({ success: true, data: upload });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
       ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
