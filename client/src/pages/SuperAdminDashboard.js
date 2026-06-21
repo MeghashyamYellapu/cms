@@ -48,8 +48,8 @@ const SuperAdminDashboard = () => {
   return (
     <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Super Admin Dashboard</h1>
-        <p className="text-gray-600 mt-1 text-sm sm:text-base">Overview of system administration</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Super Admin Dashboard</h1>
+        <p className="text-gray-600 dark:text-slate-400 mt-1 text-sm sm:text-base">Overview of system administration</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -58,47 +58,47 @@ const SuperAdminDashboard = () => {
           value={stats.totalAdmins}
           icon={Users}
           gradient="from-blue-500 to-cyan-500"
-          shadow="shadow-blue-200"
+          shadow="shadow-blue-500/20"
         />
         <StatCard
           title="Active Admins"
           value={stats.activeAdmins}
           icon={CheckCircle}
           gradient="from-emerald-500 to-teal-500"
-          shadow="shadow-emerald-200"
+          shadow="shadow-emerald-500/20"
         />
         <StatCard
           title="Super Admins"
           value={stats.superAdmins}
           icon={Shield}
           gradient="from-indigo-500 to-purple-600"
-          shadow="shadow-indigo-200"
+          shadow="shadow-indigo-500/20"
         />
         <StatCard
           title="Website Admins"
           value={stats.websiteAdmins}
           icon={Shield}
           gradient="from-amber-500 to-orange-500"
-          shadow="shadow-amber-200"
+          shadow="shadow-amber-500/20"
         />
       </div>
 
       <div className="card">
-        <h2 className="text-lg sm:text-xl font-bold mb-4">Quick Actions</h2>
+        <h2 className="text-lg sm:text-xl font-bold mb-4 dark:text-white">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div
-            className="p-4 sm:p-5 border border-gray-200 rounded-xl hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer transition-all group"
+            className="p-4 sm:p-5 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer transition-all group"
             onClick={() => window.location.href = '/admins'}
           >
             <h3 className="font-semibold text-indigo-600 mb-1 group-hover:text-indigo-700">Manage Admins</h3>
-            <p className="text-sm text-gray-500">Create, edit, or remove admin accounts.</p>
+            <p className="text-sm text-gray-500 dark:text-slate-400">Create, edit, or remove admin accounts.</p>
           </div>
           <div
-            className="p-4 sm:p-5 border border-gray-200 rounded-xl hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer transition-all group"
+            className="p-4 sm:p-5 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer transition-all group"
             onClick={() => window.location.href = '/settings'}
           >
             <h3 className="font-semibold text-indigo-600 mb-1 group-hover:text-indigo-700">System Settings</h3>
-            <p className="text-sm text-gray-500">Update company information and profile.</p>
+            <p className="text-sm text-gray-500 dark:text-slate-400">Update company information and profile.</p>
           </div>
         </div>
       </div>

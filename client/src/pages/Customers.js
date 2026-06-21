@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { customerAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +24,8 @@ import {
   User,
   FileText,
   ChevronRight,
-  History
+  History,
+  ChevronLeft
 } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -32,6 +33,7 @@ import * as Yup from 'yup';
 const Customers = () => {
   const navigate = useNavigate();
   const { isAgent } = useAuth();
+  const tableScrollRef = useRef(null);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -235,8 +237,8 @@ const Customers = () => {
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Customers</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage your customer database</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Customers</h1>
+          <p className="text-gray-600 dark:text-slate-300 mt-1 text-sm sm:text-base">Manage your customer database</p>
         </div>
         {!isAgent && (
           <div className="flex flex-col sm:flex-row gap-3">
@@ -308,35 +310,35 @@ const Customers = () => {
       </div>
 
       {/* Table */}
-      <div className="card p-0 overflow-hidden">
+      <div className="card p-0">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="spinner"></div>
           </div>
         ) : customers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-slate-400">
             <Users size={48} className="mb-4" />
             <p className="text-lg">No customers found</p>
             <p className="text-sm">Add your first customer to get started</p>
           </div>
         ) : (
           <>
-            {/* Mobile Card View */}
-            <div className="block md:hidden">
+            {/* Mobile + Small Laptop Card View */}
+            <div className="block lg:hidden">
               {customers.map((customer) => (
                 <div 
                   key={customer._id} 
-                  className="p-4 border-b hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
+                  className="p-4 border-b hover:bg-gray-50 dark:hover:bg-slate-700 active:bg-gray-100 dark:active:bg-slate-700 cursor-pointer dark:border-slate-700"
                   onClick={() => handleViewDetails(customer)}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
                         <User className="text-indigo-600" size={20} />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">{customer.name}</p>
-                        <p className="text-xs text-gray-500">{customer.customerId}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{customer.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{customer.customerId}</p>
                       </div>
                     </div>
                     <span className={`badge ${customer.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
@@ -344,15 +346,15 @@ const Customers = () => {
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm mt-3">
-                    <div className="flex items-center gap-1 text-gray-600">
+                    <div className="flex items-center gap-1 text-gray-600 dark:text-slate-300">
                       <Phone size={14} />
                       <span>{customer.phoneNumber}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-gray-600">
+                    <div className="flex items-center gap-1 text-gray-600 dark:text-slate-300">
                       <Tv size={14} />
                       <span className="badge badge-info text-xs">{customer.serviceType}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-gray-600">
+                    <div className="flex items-center gap-1 text-gray-600 dark:text-slate-300">
                       <MapPin size={14} />
                       <span className="truncate">{customer.area}</span>
                     </div>
@@ -361,17 +363,19 @@ const Customers = () => {
                       <span>₹{customer.previousBalance}</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                    <span className="text-sm text-gray-500">Package: ₹{customer.packageAmount}</span>
-                    <ChevronRight size={20} className="text-gray-400" />
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t dark:border-slate-700">
+                    <span className="text-sm text-gray-500 dark:text-slate-400">Package: ₹{customer.packageAmount}</span>
+                    <ChevronRight size={20} className="text-gray-400 dark:text-slate-500" />
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="table min-w-full">
+            <div className="hidden lg:block">
+
+              <div ref={tableScrollRef} style={{overflowX: 'scroll', width: '100%'}}>
+              <table className="table w-full" style={{minWidth: '900px'}}>
                 <thead>
                   <tr>
                     <th className="whitespace-nowrap">Customer ID</th>
@@ -389,7 +393,7 @@ const Customers = () => {
                   {customers.map((customer) => (
                     <tr 
                       key={customer._id} 
-                      className="hover:bg-gray-50 cursor-pointer"
+                      className="hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer"
                       onClick={() => handleViewDetails(customer)}
                     >
                       <td className="font-medium whitespace-nowrap">{customer.customerId}</td>
@@ -432,28 +436,29 @@ const Customers = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between p-4 border-t">
-              <p className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t dark:border-slate-700">
+              <p className="text-sm text-gray-600 dark:text-slate-300 text-center sm:text-left">
                 Showing {customers.length} of {pagination.total} customers
               </p>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                   disabled={pagination.page === 1}
-                  className="btn btn-secondary disabled:opacity-50"
+                  className="btn btn-secondary disabled:opacity-50 px-3 sm:px-4"
                 >
                   Previous
                 </button>
-                <span className="px-4 py-2">
+                <span className="px-3 py-2 text-sm whitespace-nowrap">
                   Page {pagination.page} of {pagination.pages}
                 </span>
                 <button
                   onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                   disabled={pagination.page === pagination.pages}
-                  className="btn btn-secondary disabled:opacity-50"
+                  className="btn btn-secondary disabled:opacity-50 px-3 sm:px-4"
                 >
                   Next
                 </button>
@@ -465,10 +470,10 @@ const Customers = () => {
 
       {/* Add/Edit Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
-          <div className="bg-white rounded-none md:rounded-xl max-w-2xl w-full h-full md:h-auto md:max-h-[90vh] overflow-y-auto flex flex-col md:block">
-            <div className="p-6 border-b flex items-center justify-between sticky top-0 bg-white z-10">
-              <h2 className="text-2xl font-bold">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="p-6 border-b dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800 z-10">
+              <h2 className="text-2xl font-bold dark:text-white">
                 {selectedCustomer ? 'Edit Customer' : 'Add New Customer'}
               </h2>
               <button
@@ -477,7 +482,7 @@ const Customers = () => {
                   setSelectedCustomer(null);
                   formik.resetForm();
                 }}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
               >
                 <X size={24} />
               </button>
@@ -486,7 +491,7 @@ const Customers = () => {
             <form onSubmit={formik.handleSubmit} className="p-6 space-y-4 flex-1 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Name *
                   </label>
                   <input
@@ -500,7 +505,7 @@ const Customers = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Phone Number *
                   </label>
                   <input
@@ -515,7 +520,7 @@ const Customers = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Aadhaar Number <span className="text-gray-400 font-normal">(optional{selectedCustomer ? ' — leave blank to keep existing' : ''})</span>
                   </label>
                   <input
@@ -530,7 +535,7 @@ const Customers = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Area *
                   </label>
                   <input
@@ -544,7 +549,7 @@ const Customers = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Address *
                   </label>
                   <textarea
@@ -558,7 +563,7 @@ const Customers = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Service Type *
                   </label>
                   <select className="input" {...formik.getFieldProps('serviceType')}>
@@ -569,7 +574,7 @@ const Customers = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Package Amount *
                   </label>
                   <input
@@ -583,7 +588,7 @@ const Customers = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Set-Top Box ID
                   </label>
                   <input
@@ -594,7 +599,7 @@ const Customers = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     CAF ID
                   </label>
                   <input
@@ -605,7 +610,7 @@ const Customers = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Previous Balance
                   </label>
                   <input
@@ -616,7 +621,7 @@ const Customers = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Status
                   </label>
                   <select className="input" {...formik.getFieldProps('status')}>
@@ -633,7 +638,7 @@ const Customers = () => {
                     {...formik.getFieldProps('whatsappEnabled')}
                     checked={formik.values.whatsappEnabled}
                   />
-                  <label htmlFor="whatsappEnabled" className="text-sm font-medium text-gray-700">
+                  <label htmlFor="whatsappEnabled" className="text-sm font-medium text-gray-700 dark:text-slate-200">
                     Enable WhatsApp Receipts
                   </label>
                 </div>
@@ -666,24 +671,24 @@ const Customers = () => {
 
       {/* Bulk Upload Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
-          <div className="bg-white rounded-none md:rounded-xl max-w-md w-full h-full md:h-auto p-6 flex flex-col justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-xl max-w-md w-full max-h-[95vh] sm:max-h-[90vh] p-6 flex flex-col justify-center overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">Bulk Upload Customers</h2>
+              <h2 className="text-2xl font-bold dark:text-white">Bulk Upload Customers</h2>
               <button
                 onClick={() => setShowBulkModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
               >
                 <X size={24} />
               </button>
             </div>
 
             <div className="space-y-4">
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-slate-300">
                 Upload an Excel file (.xlsx or .csv) with customer data.
               </p>
 
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 text-center">
                 <Upload className="mx-auto mb-4 text-gray-400" size={48} />
                 <label className={`btn btn-primary cursor-pointer ${uploadingFile ? 'btn-loading' : ''}`}>
                   <input
@@ -695,7 +700,7 @@ const Customers = () => {
                   />
                   <span>{uploadingFile ? 'Uploading...' : 'Choose File'}</span>
                 </label>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
                   Supported formats: .xlsx, .xls, .csv
                 </p>
               </div>
@@ -731,13 +736,13 @@ const Customers = () => {
 
       {/* Upload Result Modal */}
       {showUploadResultModal && uploadResult && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
-          <div className="bg-white rounded-none md:rounded-xl max-w-3xl w-full h-full md:h-auto md:max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b flex items-center justify-between bg-white md:rounded-t-xl">
-              <h2 className="text-2xl font-bold">Upload Results</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800 md:rounded-t-xl">
+              <h2 className="text-2xl font-bold dark:text-white">Upload Results</h2>
               <button
                 onClick={() => setShowUploadResultModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
               >
                 <X size={24} />
               </button>
@@ -745,22 +750,22 @@ const Customers = () => {
             
             <div className="p-6 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="card bg-green-50 border-green-200">
-                   <h3 className="font-bold text-green-800 text-lg">{uploadResult.success.length}</h3>
-                   <p className="text-green-600">Successful</p>
+                <div className="card bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                   <h3 className="font-bold text-green-800 dark:text-green-300 text-lg">{uploadResult.success.length}</h3>
+                   <p className="text-green-600 dark:text-green-400">Successful</p>
                 </div>
-                <div className="card bg-red-50 border-red-200">
-                   <h3 className="font-bold text-red-800 text-lg">{uploadResult.errors.length}</h3>
-                   <p className="text-red-600">Failed</p>
+                <div className="card bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+                   <h3 className="font-bold text-red-800 dark:text-red-300 text-lg">{uploadResult.errors.length}</h3>
+                   <p className="text-red-600 dark:text-red-400">Failed</p>
                 </div>
               </div>
 
               {uploadResult.errors.length > 0 && (
                 <div>
                   <h3 className="font-bold text-lg mb-3 text-red-700">Error Details</h3>
-                  <div className="table-container bg-white border rounded-lg">
+                  <div className="table-container bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg">
                     <table className="table w-full text-sm">
-                      <thead className="bg-red-50">
+                      <thead className="bg-red-50 dark:bg-red-900/20">
                         <tr>
                           <th className="px-4 py-2">Row</th>
                           <th className="px-4 py-2">Errors</th>
@@ -776,7 +781,7 @@ const Customers = () => {
                                 {err.errors.map((e, i) => <li key={i}>{e}</li>)}
                               </ul>
                             </td>
-                            <td className="px-4 py-2 text-gray-500 font-mono text-xs">
+                            <td className="px-4 py-2 text-gray-500 dark:text-slate-400 font-mono text-xs">
                               {JSON.stringify(err.data).substring(0, 100)}...
                             </td>
                           </tr>
@@ -788,7 +793,7 @@ const Customers = () => {
               )}
             </div>
 
-            <div className="p-6 border-t bg-gray-50 md:rounded-b-xl flex justify-end">
+            <div className="p-6 border-t dark:border-slate-700 bg-gray-50 dark:bg-slate-900 md:rounded-b-xl flex justify-end">
               <button 
                 onClick={() => setShowUploadResultModal(false)}
                 className="btn btn-primary"
@@ -802,13 +807,13 @@ const Customers = () => {
 
       {/* Customer Details Modal */}
       {showDetailsModal && viewCustomer && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
-          <div className="bg-white rounded-none md:rounded-xl max-w-2xl w-full h-full md:h-auto md:max-h-[90vh] flex flex-col">
-            <div className="p-4 md:p-6 border-b flex items-center justify-between bg-white md:rounded-t-xl sticky top-0 z-10">
-              <h2 className="text-xl md:text-2xl font-bold">Customer Details</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+            <div className="p-4 md:p-6 border-b dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800 md:rounded-t-xl sticky top-0 z-10">
+              <h2 className="text-xl md:text-2xl font-bold dark:text-white">Customer Details</h2>
               <button
                 onClick={() => { setShowDetailsModal(false); setViewCustomer(null); }}
-                className="text-gray-500 hover:text-gray-700 p-1"
+                className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 p-1"
               >
                 <X size={24} />
               </button>
@@ -816,19 +821,19 @@ const Customers = () => {
             
             <div className="p-4 md:p-6 overflow-y-auto flex-1">
               {/* Customer Header */}
-              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 pb-6 border-b">
-                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mx-auto md:mx-0">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 pb-6 border-b dark:border-slate-700">
+                <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center flex-shrink-0 mx-auto md:mx-0">
                   <User className="text-indigo-600" size={32} />
                 </div>
                 <div className="text-center md:text-left flex-1">
-                  <h3 className="text-xl font-bold text-gray-900">{viewCustomer.name}</h3>
-                  <p className="text-gray-500">{viewCustomer.customerId}</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">{viewCustomer.name}</h3>
+                  <p className="text-gray-500 dark:text-slate-400">{viewCustomer.customerId}</p>
                   <span className={`inline-block mt-2 badge ${viewCustomer.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
                     {viewCustomer.status}
                   </span>
                 </div>
-                <div className={`text-center md:text-right p-4 rounded-xl ${viewCustomer.previousBalance > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
-                  <p className="text-sm text-gray-600">Outstanding Balance</p>
+                <div className={`text-center md:text-right p-4 rounded-xl ${viewCustomer.previousBalance > 0 ? 'bg-red-50 dark:bg-red-900/20' : 'bg-green-50 dark:bg-green-900/20'}`}>
+                  <p className="text-sm text-gray-600 dark:text-slate-300">Outstanding Balance</p>
                   <p className={`text-2xl font-bold ${viewCustomer.previousBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                     ₹{viewCustomer.previousBalance}
                   </p>
@@ -837,34 +842,34 @@ const Customers = () => {
 
               {/* Customer Info Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <Phone className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
                   <div>
-                    <p className="text-xs text-gray-500">Phone Number</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Phone Number</p>
                     <p className="font-medium">{viewCustomer.phoneNumber}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <Tv className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
                   <div>
-                    <p className="text-xs text-gray-500">Service Type</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Service Type</p>
                     <p className="font-medium">{viewCustomer.serviceType}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <IndianRupee className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
                   <div>
-                    <p className="text-xs text-gray-500">Package Amount</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Package Amount</p>
                     <p className="font-medium">₹{viewCustomer.packageAmount}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <MapPin className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
                   <div>
-                    <p className="text-xs text-gray-500">Area</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Area</p>
                     <p className="font-medium">{viewCustomer.area}</p>
                   </div>
                 </div>
@@ -872,43 +877,43 @@ const Customers = () => {
                 <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg md:col-span-2">
                   <MapPin className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
                   <div>
-                    <p className="text-xs text-gray-500">Address</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Address</p>
                     <p className="font-medium">{viewCustomer.address}</p>
                   </div>
                 </div>
 
                 {viewCustomer.setTopBoxId && (
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
                     <FileText className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
                     <div>
-                      <p className="text-xs text-gray-500">Set-Top Box ID</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">Set-Top Box ID</p>
                       <p className="font-medium">{viewCustomer.setTopBoxId}</p>
                     </div>
                   </div>
                 )}
 
                 {viewCustomer.cafId && (
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
                     <FileText className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
                     <div>
-                      <p className="text-xs text-gray-500">CAF ID</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">CAF ID</p>
                       <p className="font-medium">{viewCustomer.cafId}</p>
                     </div>
                   </div>
                 )}
 
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <Calendar className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
                   <div>
-                    <p className="text-xs text-gray-500">Member Since</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Member Since</p>
                     <p className="font-medium">{new Date(viewCustomer.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <Phone className="text-indigo-500 mt-0.5 flex-shrink-0" size={18} />
                   <div>
-                    <p className="text-xs text-gray-500">WhatsApp Receipts</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">WhatsApp Receipts</p>
                     <p className="font-medium">{viewCustomer.whatsappEnabled ? 'Enabled' : 'Disabled'}</p>
                   </div>
                 </div>
@@ -916,7 +921,7 @@ const Customers = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="p-4 md:p-6 border-t bg-gray-50 md:rounded-b-xl flex flex-col sm:flex-row gap-3">
+            <div className="p-4 md:p-6 border-t dark:border-slate-700 bg-gray-50 dark:bg-slate-900 md:rounded-b-xl flex flex-col sm:flex-row gap-3">
               <button 
                 onClick={() => handleRecordPayment(viewCustomer)}
                 className="btn btn-primary flex-1 flex items-center justify-center gap-2"

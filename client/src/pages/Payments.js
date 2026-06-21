@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { paymentAPI, customerAPI, billAPI, settingsAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { CreditCard, Plus, Search, Send, Download, MessageCircle, User, Calendar, IndianRupee, Clock, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { CreditCard, Plus, Search, Send, Download, MessageCircle, User, Calendar, IndianRupee, Clock, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import html2canvas from 'html2canvas';
@@ -10,6 +10,7 @@ import ReceiptTemplate from '../components/ReceiptTemplate';
 
 const Payments = () => {
   const location = useLocation();
+  const tableScrollRef = useRef(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -530,8 +531,8 @@ Verify at: ${window.location.origin}/portal`;
     <div className="p-4 sm:p-6">
       <div className="flex flex-col gap-4 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Payments</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage payment records</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Payments</h1>
+          <p className="text-gray-600 dark:text-slate-300 mt-1 text-sm sm:text-base">Manage payment records</p>
         </div>
         <button
           onClick={() => {
@@ -564,7 +565,7 @@ Verify at: ${window.location.origin}/portal`;
             <div className="loading h-8 w-8"></div>
           </div>
         ) : payments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-slate-400">
             <CreditCard size={48} className="mb-4" />
             <p className="text-lg">No payments recorded yet</p>
             <p className="text-sm">Click "Record Payment" to add a payment</p>
@@ -587,7 +588,7 @@ Verify at: ${window.location.origin}/portal`;
                 .map((payment) => (
                 <div 
                   key={payment._id} 
-                  className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
+                  className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden"
                 >
                   {/* Card Header - Always visible */}
                   <div 
@@ -596,8 +597,8 @@ Verify at: ${window.location.origin}/portal`;
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{payment.customerId?.name}</p>
-                        <p className="text-xs text-gray-500">{payment.customerId?.phoneNumber}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{payment.customerId?.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{payment.customerId?.phoneNumber}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-green-600">₹{payment.paidAmount}</p>
@@ -608,8 +609,8 @@ Verify at: ${window.location.origin}/portal`;
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span className="font-medium text-gray-700">{payment.receiptId}</span>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400">
+                        <span className="font-medium text-gray-700 dark:text-slate-200">{payment.receiptId}</span>
                         <span>•</span>
                         <span>{payment.billId?.month} {payment.billId?.year}</span>
                       </div>
@@ -633,19 +634,19 @@ Verify at: ${window.location.origin}/portal`;
                   
                   {/* Expanded Details */}
                   {expandedPaymentId === payment._id && (
-                    <div className="border-t border-gray-100 bg-gray-50 p-4">
+                    <div className="border-t border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 p-4">
                       <div className="grid grid-cols-2 gap-3 text-sm mb-4">
                         <div className="flex items-center gap-2">
-                          <User size={14} className="text-gray-400" />
-                          <span className="text-gray-600">Customer ID:</span>
+                          <User size={14} className="text-gray-400 dark:text-slate-500" />
+                          <span className="text-gray-600 dark:text-slate-300">Customer ID:</span>
                         </div>
-                        <span className="font-medium text-right">{payment.customerId?.customerId}</span>
-                        
+                        <span className="font-medium text-right dark:text-slate-100">{payment.customerId?.customerId}</span>
+
                         <div className="flex items-center gap-2">
-                          <Calendar size={14} className="text-gray-400" />
-                          <span className="text-gray-600">Date:</span>
+                          <Calendar size={14} className="text-gray-400 dark:text-slate-500" />
+                          <span className="text-gray-600 dark:text-slate-300">Date:</span>
                         </div>
-                        <span className="font-medium text-right">
+                        <span className="font-medium text-right dark:text-slate-100">
                           {new Date(payment.paymentDate).toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
@@ -656,16 +657,16 @@ Verify at: ${window.location.origin}/portal`;
                         {payment.transactionId && (
                           <>
                             <div className="flex items-center gap-2">
-                              <CreditCard size={14} className="text-gray-400" />
-                              <span className="text-gray-600">Txn ID:</span>
+                              <CreditCard size={14} className="text-gray-400 dark:text-slate-500" />
+                              <span className="text-gray-600 dark:text-slate-300">Txn ID:</span>
                             </div>
-                            <span className="font-medium text-right truncate">{payment.transactionId}</span>
+                            <span className="font-medium text-right truncate dark:text-slate-100">{payment.transactionId}</span>
                           </>
                         )}
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex gap-2 pt-2 border-t border-gray-200">
+                      <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-slate-700">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -704,8 +705,10 @@ Verify at: ${window.location.origin}/portal`;
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="table min-w-full">
+            <div className="hidden lg:block">
+
+              <div ref={tableScrollRef} style={{overflowX: 'scroll', width: '100%'}}>
+              <table className="table w-full" style={{minWidth: '800px'}}>
                 <thead>
                   <tr>
                     <th>Receipt ID</th>
@@ -736,7 +739,7 @@ Verify at: ${window.location.origin}/portal`;
                       <td>
                         <div>
                           <p className="font-medium">{payment.customerId?.name}</p>
-                          <p className="text-sm text-gray-500">{payment.customerId?.phoneNumber}</p>
+                          <p className="text-sm text-gray-500 dark:text-slate-400">{payment.customerId?.phoneNumber}</p>
                         </div>
                       </td>
                       <td>{payment.billId?.month} {payment.billId?.year}</td>
@@ -780,6 +783,7 @@ Verify at: ${window.location.origin}/portal`;
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </>
         )}
@@ -788,9 +792,9 @@ Verify at: ${window.location.origin}/portal`;
       {/* Add Payment Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl md:rounded-xl w-full md:max-w-lg max-h-[90vh] overflow-hidden flex flex-col animate-slide-up md:animate-none md:mx-4">
+          <div className="bg-white dark:bg-slate-800 rounded-t-2xl md:rounded-xl w-full md:max-w-lg max-h-[90vh] overflow-hidden flex flex-col animate-slide-up md:animate-none md:mx-4">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-indigo-600 to-purple-600 text-white sticky top-0">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-indigo-600 to-purple-600 text-white sticky top-0">
               <div>
                 <h2 className="text-xl font-bold">Record Payment</h2>
                 <p className="text-sm text-indigo-100">Enter payment details</p>
@@ -814,7 +818,7 @@ Verify at: ${window.location.origin}/portal`;
               <form id="paymentForm" onSubmit={formik.handleSubmit} className="space-y-4">
                 {/* Customer Search */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Select Customer *
                   </label>
                   <div className="relative">
@@ -836,7 +840,7 @@ Verify at: ${window.location.origin}/portal`;
                     
                     {/* Dropdown List */}
                     {isDropdownOpen && searchTerm && (
-                      <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                      <div className="absolute z-20 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                         {customers
                           .filter(c => 
                             (c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -847,7 +851,7 @@ Verify at: ${window.location.origin}/portal`;
                           .map(customer => (
                             <div
                               key={customer._id}
-                              className="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 last:border-0 active:bg-indigo-100"
+                              className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer border-b border-gray-50 dark:border-slate-700 last:border-0 active:bg-indigo-100"
                               onClick={() => {
                                 handleCustomerChange(customer._id);
                                 setSearchTerm(`${customer.name} - ${customer.customerId}`);
@@ -856,20 +860,20 @@ Verify at: ${window.location.origin}/portal`;
                             >
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <p className="font-medium text-gray-900">{customer.name}</p>
-                                  <p className="text-xs text-gray-500 mt-0.5">{customer.customerId} • {customer.phoneNumber}</p>
+                                  <p className="font-medium text-gray-900 dark:text-white">{customer.name}</p>
+                                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{customer.customerId} • {customer.phoneNumber}</p>
                                 </div>
                                 <div className="text-right">
                                   {customer.previousBalance < 0 ? (
-                                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                                    <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full font-medium">
                                       Adv: ₹{Math.abs(customer.previousBalance)}
                                     </span>
                                   ) : customer.previousBalance > 0 ? (
-                                    <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                                    <span className="text-xs px-2 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-full font-medium">
                                       Due: ₹{customer.previousBalance}
                                     </span>
                                   ) : (
-                                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                                    <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 rounded-full">
                                       No Dues
                                     </span>
                                   )}
@@ -901,12 +905,12 @@ Verify at: ${window.location.origin}/portal`;
                           <User size={20} className="text-white" />
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900">{selectedCustomer.name}</p>
-                          <p className="text-xs text-gray-500">{selectedCustomer.customerId}</p>
+                          <p className="font-semibold text-gray-900 dark:text-white">{selectedCustomer.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-slate-400">{selectedCustomer.customerId}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">Current Balance</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">Current Balance</p>
                         <p className={`text-xl font-bold ${totalOutstanding > 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {totalOutstanding < 0 ? `₹${Math.abs(totalOutstanding)}` : `₹${totalOutstanding}`}
                         </p>
@@ -925,8 +929,8 @@ Verify at: ${window.location.origin}/portal`;
                 {selectedCustomer && (
                   <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg ${
                     formik.values.billId
-                      ? 'bg-green-50 text-green-700 border border-green-200'
-                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                      : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                   }`}>
                     <span>{formik.values.billId ? '✓ Bill found' : '⚠ No bill yet — one will be auto-created on submit'}</span>
                   </div>
@@ -935,7 +939,7 @@ Verify at: ${window.location.origin}/portal`;
                 {/* Amount and Payment Mode */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                       Amount Paid *
                     </label>
                     <div className="relative">
@@ -948,7 +952,7 @@ Verify at: ${window.location.origin}/portal`;
                       />
                     </div>
                     {formik.values.paidAmount !== '' && selectedCustomer && (
-                      <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <div className="mt-2 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg border border-gray-100 dark:border-slate-600">
                         {(() => {
                           const paid = Number(formik.values.paidAmount);
                           const newBalance = totalOutstanding - paid;
@@ -959,7 +963,7 @@ Verify at: ${window.location.origin}/portal`;
                             </div>
                           ) : (
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Remaining Due:</span>
+                              <span className="text-sm text-gray-600 dark:text-slate-300">Remaining Due:</span>
                               <span className={`font-bold ${newBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                                 ₹{Math.max(0, newBalance)}
                               </span>
@@ -974,7 +978,7 @@ Verify at: ${window.location.origin}/portal`;
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                       Payment Mode *
                     </label>
                     <select className="input text-base" {...formik.getFieldProps('paymentMode')}>
@@ -990,7 +994,7 @@ Verify at: ${window.location.origin}/portal`;
                 {/* Transaction ID - Show only for digital payments */}
                 {formik.values.paymentMode !== 'Cash' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                       Transaction ID (Optional)
                     </label>
                     <input
@@ -1003,7 +1007,7 @@ Verify at: ${window.location.origin}/portal`;
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Notes (Optional)
                   </label>
                   <textarea
@@ -1017,7 +1021,7 @@ Verify at: ${window.location.origin}/portal`;
             </div>
             
             {/* Modal Footer - Fixed at bottom */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50 flex gap-3 sticky bottom-0">
+            <div className="p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 flex gap-3 sticky bottom-0">
               <button
                 type="submit"
                 form="paymentForm"

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { customerAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { History, CheckCircle, XCircle, FileSpreadsheet, X, ChevronLeft, ChevronRight, User } from 'lucide-react';
 
 const BulkUploadHistory = () => {
+  const tableScrollRef = useRef(null);
   const [uploads, setUploads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -56,11 +57,11 @@ const BulkUploadHistory = () => {
   return (
     <div className="p-4 sm:p-6">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <History size={28} className="text-indigo-600" />
           Bulk Upload History
         </h1>
-        <p className="text-gray-600 mt-1 text-sm sm:text-base">
+        <p className="text-gray-600 dark:text-slate-400 mt-1 text-sm sm:text-base">
           Review every bulk upload — which customers were added and why others failed
         </p>
       </div>
@@ -71,7 +72,7 @@ const BulkUploadHistory = () => {
             <div className="loading h-8 w-8"></div>
           </div>
         ) : uploads.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-slate-400">
             <FileSpreadsheet size={48} className="mb-4" />
             <p className="text-lg">No bulk uploads yet</p>
             <p className="text-sm">Uploads from the Customers page will show up here</p>
@@ -83,17 +84,17 @@ const BulkUploadHistory = () => {
               {uploads.map((upload) => (
                 <div
                   key={upload._id}
-                  className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 cursor-pointer"
+                  className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm p-4 cursor-pointer"
                   onClick={() => handleViewDetail(upload._id)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{upload.fileName}</p>
-                      <p className="text-xs text-gray-500">{formatDate(upload.createdAt)}</p>
+                      <p className="font-semibold text-gray-900 dark:text-white truncate">{upload.fileName}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{formatDate(upload.createdAt)}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
                       By {upload.uploadedBy?.name || 'Unknown'} • {upload.totalRows} rows
                     </p>
                     <div className="flex gap-2">
@@ -110,8 +111,10 @@ const BulkUploadHistory = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="table min-w-full">
+            <div className="hidden lg:block">
+
+              <div ref={tableScrollRef} style={{overflowX: 'scroll', width: '100%'}}>
+              <table className="table w-full" style={{minWidth: '700px'}}>
                 <thead>
                   <tr>
                     <th>Date</th>
@@ -152,6 +155,7 @@ const BulkUploadHistory = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
 
             {/* Pagination */}
@@ -160,15 +164,15 @@ const BulkUploadHistory = () => {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="p-2 rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50"
+                  className="p-2 rounded-lg border border-gray-200 dark:border-slate-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-slate-300"
                 >
                   <ChevronLeft size={18} />
                 </button>
-                <span className="text-sm text-gray-600">Page {page} of {pages}</span>
+                <span className="text-sm text-gray-600 dark:text-slate-400">Page {page} of {pages}</span>
                 <button
                   onClick={() => setPage((p) => Math.min(pages, p + 1))}
                   disabled={page >= pages}
-                  className="p-2 rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50"
+                  className="p-2 rounded-lg border border-gray-200 dark:border-slate-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-slate-300"
                 >
                   <ChevronRight size={18} />
                 </button>
@@ -180,20 +184,20 @@ const BulkUploadHistory = () => {
 
       {/* Detail Modal */}
       {(selectedUpload || loadingDetail) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
-          <div className="bg-white rounded-none md:rounded-xl max-w-3xl w-full h-full md:h-auto md:max-h-[90vh] flex flex-col">
-            <div className="p-4 md:p-6 border-b flex items-center justify-between bg-white md:rounded-t-xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+            <div className="p-4 md:p-6 border-b dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800 md:rounded-t-xl">
               <div>
-                <h2 className="text-xl md:text-2xl font-bold">Upload Details</h2>
+                <h2 className="text-xl md:text-2xl font-bold dark:text-white">Upload Details</h2>
                 {selectedUpload && (
-                  <p className="text-sm text-gray-500 mt-0.5">
+                  <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
                     {selectedUpload.fileName} • {formatDate(selectedUpload.createdAt)} • By {selectedUpload.uploadedBy?.name || 'Unknown'}
                   </p>
                 )}
               </div>
               <button
                 onClick={() => { setSelectedUpload(null); }}
-                className="text-gray-500 hover:text-gray-700 p-1"
+                className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 p-1"
               >
                 <X size={24} />
               </button>
@@ -207,28 +211,28 @@ const BulkUploadHistory = () => {
               <>
                 <div className="p-4 md:p-6 overflow-y-auto flex-1">
                   <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="card bg-gray-50 border-gray-200 text-center py-3">
-                      <h3 className="font-bold text-gray-800 text-lg">{selectedUpload.totalRows}</h3>
-                      <p className="text-gray-500 text-sm">Total Rows</p>
+                    <div className="card bg-gray-50 dark:bg-slate-700 border-gray-200 dark:border-slate-600 text-center py-3">
+                      <h3 className="font-bold text-gray-800 dark:text-white text-lg">{selectedUpload.totalRows}</h3>
+                      <p className="text-gray-500 dark:text-slate-400 text-sm">Total Rows</p>
                     </div>
-                    <div className="card bg-green-50 border-green-200 text-center py-3">
-                      <h3 className="font-bold text-green-800 text-lg">{selectedUpload.successCount}</h3>
-                      <p className="text-green-600 text-sm">Successful</p>
+                    <div className="card bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-center py-3">
+                      <h3 className="font-bold text-green-800 dark:text-green-300 text-lg">{selectedUpload.successCount}</h3>
+                      <p className="text-green-600 dark:text-green-400 text-sm">Successful</p>
                     </div>
-                    <div className="card bg-red-50 border-red-200 text-center py-3">
-                      <h3 className="font-bold text-red-800 text-lg">{selectedUpload.errorCount}</h3>
-                      <p className="text-red-600 text-sm">Failed</p>
+                    <div className="card bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-center py-3">
+                      <h3 className="font-bold text-red-800 dark:text-red-300 text-lg">{selectedUpload.errorCount}</h3>
+                      <p className="text-red-600 dark:text-red-400 text-sm">Failed</p>
                     </div>
                   </div>
 
                   {/* Tabs */}
-                  <div className="flex gap-2 mb-4 border-b border-gray-200">
+                  <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-slate-700">
                     <button
                       onClick={() => setActiveTab('errors')}
                       className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                         activeTab === 'errors'
-                          ? 'border-red-600 text-red-700'
-                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                          ? 'border-red-600 text-red-700 dark:text-red-400'
+                          : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
                       }`}
                     >
                       Failed ({selectedUpload.errorCount})
@@ -237,8 +241,8 @@ const BulkUploadHistory = () => {
                       onClick={() => setActiveTab('success')}
                       className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                         activeTab === 'success'
-                          ? 'border-green-600 text-green-700'
-                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                          ? 'border-green-600 text-green-700 dark:text-green-400'
+                          : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
                       }`}
                     >
                       Successful ({selectedUpload.successCount})
@@ -247,11 +251,11 @@ const BulkUploadHistory = () => {
 
                   {activeTab === 'errors' && (
                     selectedUpload.errorDetails.length === 0 ? (
-                      <p className="text-gray-500 text-sm text-center py-6">No failed rows in this upload.</p>
+                      <p className="text-gray-500 dark:text-slate-400 text-sm text-center py-6">No failed rows in this upload.</p>
                     ) : (
-                      <div className="table-container bg-white border rounded-lg overflow-x-auto">
-                        <table className="table w-full text-sm">
-                          <thead className="bg-red-50">
+                      <div className="table-container bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg overflow-x-auto">
+                        <table className="table w-full text-sm" style={{minWidth: '500px'}}>
+                          <thead className="bg-red-50 dark:bg-red-900/20">
                             <tr>
                               <th className="px-4 py-2">Row</th>
                               <th className="px-4 py-2">Reason(s)</th>
@@ -280,11 +284,11 @@ const BulkUploadHistory = () => {
 
                   {activeTab === 'success' && (
                     selectedUpload.successDetails.length === 0 ? (
-                      <p className="text-gray-500 text-sm text-center py-6">No customers were added in this upload.</p>
+                      <p className="text-gray-500 dark:text-slate-400 text-sm text-center py-6">No customers were added in this upload.</p>
                     ) : (
-                      <div className="table-container bg-white border rounded-lg overflow-x-auto">
-                        <table className="table w-full text-sm">
-                          <thead className="bg-green-50">
+                      <div className="table-container bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg overflow-x-auto">
+                        <table className="table w-full text-sm" style={{minWidth: '500px'}}>
+                          <thead className="bg-green-50 dark:bg-green-900/20">
                             <tr>
                               <th className="px-4 py-2">Row</th>
                               <th className="px-4 py-2">Customer ID</th>
@@ -298,7 +302,7 @@ const BulkUploadHistory = () => {
                                 <td className="px-4 py-2 font-medium">#{s.row}</td>
                                 <td className="px-4 py-2">{s.customerId}</td>
                                 <td className="px-4 py-2 flex items-center gap-1.5">
-                                  <User size={14} className="text-gray-400" /> {s.name}
+                                  <User size={14} className="text-gray-400 dark:text-slate-500" /> {s.name}
                                 </td>
                                 <td className="px-4 py-2">{s.phoneNumber}</td>
                               </tr>
@@ -310,7 +314,7 @@ const BulkUploadHistory = () => {
                   )}
                 </div>
 
-                <div className="p-4 md:p-6 border-t bg-gray-50 md:rounded-b-xl flex justify-end">
+                <div className="p-4 md:p-6 border-t dark:border-slate-700 bg-gray-50 dark:bg-slate-900 md:rounded-b-xl flex justify-end">
                   <button onClick={() => setSelectedUpload(null)} className="btn btn-primary">
                     Close
                   </button>

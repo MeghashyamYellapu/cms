@@ -185,33 +185,33 @@ const Settings = () => {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage system configuration</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <p className="text-gray-600 dark:text-slate-400 mt-1 text-sm sm:text-base">Manage system configuration</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {/* Profile Settings */}
         <div className="card">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <User className="text-blue-600" size={20} />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <User className="text-blue-600 dark:text-blue-400" size={20} />
             </div>
             <div>
-              <h3 className="font-semibold text-base sm:text-lg">Profile Settings</h3>
-              <p className="text-xs sm:text-sm text-gray-600">Manage your account</p>
+              <h3 className="font-semibold text-base sm:text-lg dark:text-white">Profile Settings</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-400">Manage your account</p>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
              <div>
-               <p className="text-sm text-gray-600">Name</p>
-               <p className="font-medium text-lg">{admin?.name}</p>
+               <p className="text-sm text-gray-600 dark:text-slate-400">Name</p>
+               <p className="font-medium text-lg dark:text-white">{admin?.name}</p>
              </div>
              <div>
-               <p className="text-sm text-gray-600">Email</p>
-               <p className="font-medium text-lg">{admin?.email}</p>
+               <p className="text-sm text-gray-600 dark:text-slate-400">Email</p>
+               <p className="font-medium text-lg dark:text-white">{admin?.email}</p>
              </div>
              <div>
-               <p className="text-sm text-gray-600">Role</p>
+               <p className="text-sm text-gray-600 dark:text-slate-400">Role</p>
                <span className="badge badge-info">{admin?.role}</span>
              </div>
           </div>
@@ -221,10 +221,10 @@ const Settings = () => {
       {/* Legacy Sections (Company Info etc) */}
       <div className="card">
          {/* ... (keep existing Company Info logic) ... */}
-         <h3 className="font-semibold text-lg mb-4">Company Information</h3>
+         <h3 className="font-semibold text-lg mb-4 dark:text-white">Company Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Company Name</label>
+            <label className="block text-sm text-gray-600 dark:text-slate-300 mb-1">Company Name</label>
             <input 
               type="text" 
               name="companyName"
@@ -236,7 +236,7 @@ const Settings = () => {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Phone Number</label>
+            <label className="block text-sm text-gray-600 dark:text-slate-300 mb-1">Phone Number</label>
             <input 
               type="text" 
               name="companyPhone"
@@ -248,7 +248,7 @@ const Settings = () => {
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm text-gray-600 mb-1">Address</label>
+            <label className="block text-sm text-gray-600 dark:text-slate-300 mb-1">Address</label>
             <textarea 
               name="companyAddress"
               className="input" 
@@ -260,7 +260,7 @@ const Settings = () => {
             ></textarea>
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Email</label>
+            <label className="block text-sm text-gray-600 dark:text-slate-300 mb-1">Email</label>
             <input 
               type="email" 
               name="companyEmail"
@@ -287,15 +287,15 @@ const Settings = () => {
 
       {/* UPI Payment Settings */}
       <div className="card">
-        <h3 className="font-semibold text-lg mb-4">UPI Payment Settings</h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <h3 className="font-semibold text-lg mb-4 dark:text-white">UPI Payment Settings</h3>
+        <p className="text-sm text-gray-600 dark:text-slate-400 mb-4">
           Enable UPI payments in the customer portal. Customers can pay their outstanding balance via PhonePe, Google Pay, or Paytm.
         </p>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
             <div>
-              <p className="font-medium">Enable UPI Payments</p>
-              <p className="text-sm text-gray-500">Allow customers to pay via UPI apps</p>
+              <p className="font-medium dark:text-white">Enable UPI Payments</p>
+              <p className="text-sm text-gray-500 dark:text-slate-400">Allow customers to pay via UPI apps</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -311,7 +311,7 @@ const Settings = () => {
 
           {settings.upiEnabled && (
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
+              <label className="block text-sm text-gray-600 dark:text-slate-300 mb-1">
                 UPI ID <span className="text-red-500">*</span>
               </label>
               <input
@@ -322,7 +322,7 @@ const Settings = () => {
                 onChange={handleInputChange}
                 placeholder="yourname@paytm / yourname@ybl / yourname@oksbi"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
                 Enter your UPI ID (e.g., 9876543210@paytm). This will be used for customer payments.
               </p>
             </div>
@@ -355,38 +355,38 @@ const Settings = () => {
       {/* Push Notification Settings */}
       <div className="card">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-            <Bell className="text-purple-600" size={24} />
+          <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+            <Bell className="text-purple-600 dark:text-purple-400" size={24} />
           </div>
           <div>
-            <h3 className="font-semibold text-lg">Push Notifications</h3>
-            <p className="text-sm text-gray-600">Receive payment reminders and updates</p>
+            <h3 className="font-semibold text-lg dark:text-white">Push Notifications</h3>
+            <p className="text-sm text-gray-600 dark:text-slate-400">Receive payment reminders and updates</p>
           </div>
         </div>
         
         <div className="space-y-4">
           {!pushSupported ? (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <p className="text-amber-800 text-sm">
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+              <p className="text-amber-800 dark:text-amber-300 text-sm">
                 Push notifications are not supported in this browser. For the best experience, 
                 please use Chrome, Firefox, or Edge.
               </p>
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
                 <div className="flex items-center gap-3">
                   {notificationPermission === 'granted' ? (
-                    <BellRing className="text-green-600" size={24} />
+                    <BellRing className="text-green-600 dark:text-green-400" size={24} />
                   ) : (
-                    <BellOff className="text-gray-400" size={24} />
+                    <BellOff className="text-gray-400 dark:text-slate-500" size={24} />
                   )}
                   <div>
-                    <p className="font-medium">
+                    <p className="font-medium dark:text-white">
                       {notificationPermission === 'granted' ? 'Notifications Enabled' : 'Notifications Disabled'}
                     </p>
-                    <p className="text-sm text-gray-500">
-                      {notificationPermission === 'granted' 
+                    <p className="text-sm text-gray-500 dark:text-slate-400">
+                      {notificationPermission === 'granted'
                         ? 'You will receive payment and billing alerts'
                         : 'Enable to receive important updates'}
                     </p>
@@ -396,7 +396,7 @@ const Settings = () => {
                   onClick={handleNotificationToggle}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     notificationPermission === 'granted'
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                       : 'bg-purple-600 text-white hover:bg-purple-700'
                   }`}
                 >
@@ -415,8 +415,8 @@ const Settings = () => {
               )}
               
               {notificationPermission === 'denied' && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-800 text-sm">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <p className="text-red-800 dark:text-red-300 text-sm">
                     Notifications are blocked. Please enable them in your browser settings 
                     (click the lock icon in the address bar).
                   </p>
@@ -430,9 +430,9 @@ const Settings = () => {
       {/* Admin Modal */}
       {showAdminModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4">
-          <div className="bg-white rounded-none md:rounded-xl max-w-md w-full h-full md:h-auto p-6 flex flex-col justify-center">
+          <div className="bg-white dark:bg-slate-800 rounded-none md:rounded-xl max-w-md w-full h-full md:h-auto p-6 flex flex-col justify-center">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">{selectedAdmin ? 'Edit Admin' : 'New Admin'}</h2>
+              <h2 className="text-xl font-bold dark:text-white">{selectedAdmin ? 'Edit Admin' : 'New Admin'}</h2>
               <button onClick={() => setShowAdminModal(false)}><X size={24}/></button>
             </div>
             <form onSubmit={handleAdminSubmit} className="space-y-4">

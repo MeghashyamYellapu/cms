@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { Shield, Trash2, Edit, Plus, X, Search, UserCog } from 'lucide-react';
+import { Shield, Trash2, Edit, Plus, X, Search, UserCog, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Admins = () => {
   const { admin } = useAuth();
   const isAdminRole = admin?.role === 'Admin';
+  const agentsTableRef = useRef(null);
+  const adminsTableRef = useRef(null);
 
   // ── State for WebsiteAdmin / SuperAdmin view ──
   const [admins, setAdmins] = useState([]);
@@ -203,8 +205,8 @@ const Admins = () => {
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Agents</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">My Agents</h1>
+            <p className="text-gray-600 dark:text-slate-300 mt-1 text-sm sm:text-base">
               Manage your payment collection agents ({agents.length}/2 used)
             </p>
           </div>
@@ -226,23 +228,23 @@ const Admins = () => {
           ) : agents.length === 0 ? (
             <div className="text-center py-16">
               <UserCog size={48} className="mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-500 font-medium">No agents yet</p>
-              <p className="text-gray-400 text-sm mt-1">Add up to 2 agents to help collect payments</p>
+              <p className="text-gray-500 dark:text-slate-400 font-medium">No agents yet</p>
+              <p className="text-gray-400 dark:text-slate-500 text-sm mt-1">Add up to 2 agents to help collect payments</p>
             </div>
           ) : (
             <>
               {/* Mobile Card View */}
-              <div className="block md:hidden space-y-3">
+              <div className="block lg:hidden space-y-3">
                 {agents.map(agent => (
-                  <div key={agent._id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <div key={agent._id} className="bg-gray-50 dark:bg-slate-700 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-violet-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-full flex items-center justify-center flex-shrink-0">
                           <UserCog size={18} className="text-violet-600" />
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900">{agent.name}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{agent.email}</p>
+                          <p className="font-semibold text-gray-900 dark:text-white">{agent.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{agent.email}</p>
                         </div>
                       </div>
                       <span className={`badge ${agent.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
@@ -265,8 +267,10 @@ const Admins = () => {
               </div>
 
               {/* Desktop Table View */}
-              <div className="hidden md:block table-container">
-                <table className="table">
+              <div className="hidden lg:block">
+
+                <div ref={agentsTableRef} style={{overflowX: 'scroll', width: '100%'}}>
+                <table className="table w-full" style={{minWidth: '700px'}}>
                   <thead>
                     <tr>
                       <th>Name</th>
@@ -301,6 +305,7 @@ const Admins = () => {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </>
           )}
@@ -309,8 +314,8 @@ const Admins = () => {
         {/* Agent Modal */}
         {showAgentModal && (
           <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-            <div className="bg-white rounded-t-2xl sm:rounded-xl w-full sm:max-w-md max-h-[90vh] flex flex-col animate-slide-up sm:animate-none sm:mx-4">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-t-2xl sm:rounded-t-xl flex-shrink-0">
+            <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-md max-h-[90vh] flex flex-col animate-slide-up sm:animate-none sm:mx-4">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-t-2xl sm:rounded-t-xl flex-shrink-0">
                 <div>
                   <h2 className="text-lg font-bold text-white">{selectedAgent ? 'Edit Agent' : 'New Agent'}</h2>
                   <p className="text-violet-100 text-xs mt-0.5">
@@ -324,23 +329,23 @@ const Admins = () => {
 
               <form id="agentForm" onSubmit={handleAgentSubmit} className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Full Name *</label>
                   <input className="input" placeholder="e.g. Ravi Kumar" value={agentForm.name}
                     onChange={e => setAgentForm({ ...agentForm, name: e.target.value })} required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Email Address *</label>
                   <input className="input" type="email" placeholder="agent@example.com" value={agentForm.email}
                     onChange={e => setAgentForm({ ...agentForm, email: e.target.value })} required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number <span className="text-gray-400 font-normal">(optional — for phone login)</span></label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Phone Number <span className="text-gray-400 font-normal">(optional — for phone login)</span></label>
                   <input className="input" type="tel" placeholder="e.g. 9876543210" maxLength={10}
                     value={agentForm.phoneNumber}
                     onChange={e => setAgentForm({ ...agentForm, phoneNumber: e.target.value.replace(/\D/g, '') })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">
                     Password {selectedAgent && <span className="text-gray-400 font-normal">(leave blank to keep)</span>}
                     {!selectedAgent && ' *'}
                   </label>
@@ -349,7 +354,7 @@ const Admins = () => {
                     required={!selectedAgent} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Status</label>
                   <select className="input" value={agentForm.status} onChange={e => setAgentForm({ ...agentForm, status: e.target.value })}>
                     <option value="Active">Active</option>
                     <option value="Blocked">Blocked</option>
@@ -357,7 +362,7 @@ const Admins = () => {
                 </div>
               </form>
 
-              <div className="flex gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex-shrink-0">
+              <div className="flex gap-3 px-5 py-4 border-t border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 rounded-b-xl flex-shrink-0">
                 <button type="submit" form="agentForm"
                   className={`btn btn-primary flex-1 py-3 text-base font-semibold ${agentSaving ? 'btn-loading' : ''}`}
                   disabled={agentSaving}>
@@ -379,8 +384,8 @@ const Admins = () => {
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Manage Admins</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Create and manage admin accounts</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Manage Admins</h1>
+          <p className="text-gray-600 dark:text-slate-300 mt-1 text-sm sm:text-base">Create and manage admin accounts</p>
         </div>
         <button
           onClick={() => { resetAdminForm(); setShowAdminModal(true); }}
@@ -410,17 +415,17 @@ const Admins = () => {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="block md:hidden space-y-3">
+            <div className="block lg:hidden space-y-3">
               {filteredAdmins.length > 0 ? filteredAdmins.map(adm => (
-                <div key={adm._id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div key={adm._id} className="bg-gray-50 dark:bg-slate-700 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center flex-shrink-0">
                         <Shield size={18} className="text-indigo-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">{adm.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{adm.email}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{adm.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{adm.email}</p>
                       </div>
                     </div>
                     <span className={`badge ${adm.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
@@ -442,7 +447,7 @@ const Admins = () => {
                           )}
                         </>
                       ) : (
-                        <span className="text-xs text-gray-400 py-2">
+                        <span className="text-xs text-gray-400 dark:text-slate-500 py-2">
                           {adm._id === admin._id ? 'You' : 'No Access'}
                         </span>
                       )}
@@ -458,8 +463,10 @@ const Admins = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block table-container">
-              <table className="table">
+            <div className="hidden lg:block">
+
+              <div ref={adminsTableRef} style={{overflowX: 'scroll', width: '100%'}}>
+              <table className="table w-full" style={{minWidth: '700px'}}>
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -500,22 +507,23 @@ const Admins = () => {
                               )}
                             </div>
                           ) : adm._id === admin._id ? (
-                            <span className="text-xs text-gray-400">Current User</span>
+                            <span className="text-xs text-gray-400 dark:text-slate-500">Current User</span>
                           ) : (
-                            <span className="text-xs text-gray-400">No Access</span>
+                            <span className="text-xs text-gray-400 dark:text-slate-500">No Access</span>
                           )}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center py-8 text-gray-500">
+                      <td colSpan="6" className="text-center py-8 text-gray-500 dark:text-slate-400">
                         No admins found matching your search.
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
           </>
         )}
@@ -524,10 +532,10 @@ const Admins = () => {
       {/* Admin Modal */}
       {showAdminModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl sm:rounded-xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] flex flex-col animate-slide-up sm:animate-none sm:mx-4">
+          <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] flex flex-col animate-slide-up sm:animate-none sm:mx-4">
 
             {/* Sticky Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-t-2xl sm:rounded-t-xl flex-shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-t-2xl sm:rounded-t-xl flex-shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-white">
                   {selectedAdmin ? 'Edit Admin' : 'New Admin'}
@@ -549,10 +557,10 @@ const Admins = () => {
 
               {/* Account Details */}
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Account Details</p>
+                <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-3">Account Details</p>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Full Name *</label>
                     <input
                       className="input"
                       placeholder="e.g. John Doe"
@@ -562,7 +570,7 @@ const Admins = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Email Address *</label>
                     <input
                       className="input"
                       type="email"
@@ -573,7 +581,7 @@ const Admins = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number <span className="text-gray-400 font-normal">(optional — for phone login)</span></label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Phone Number <span className="text-gray-400 font-normal">(optional — for phone login)</span></label>
                     <input
                       className="input"
                       type="tel"
@@ -584,7 +592,7 @@ const Admins = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">
                       Password {selectedAdmin && <span className="text-gray-400 font-normal">(leave blank to keep current)</span>}
                       {!selectedAdmin && ' *'}
                     </label>
@@ -599,7 +607,7 @@ const Admins = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Role *</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Role *</label>
                       <select
                         className="input"
                         value={adminForm.role}
@@ -615,7 +623,7 @@ const Admins = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Status *</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Status *</label>
                       <select
                         className="input"
                         value={adminForm.status}
@@ -630,11 +638,11 @@ const Admins = () => {
               </div>
 
               {/* Company Information */}
-              <div className="border-t border-gray-100 pt-4">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Company Information</p>
+              <div className="border-t border-gray-100 dark:border-slate-700 pt-4">
+                <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-3">Company Information</p>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Company Name</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Company Name</label>
                     <input
                       className="input"
                       placeholder="e.g. My Cable Services"
@@ -643,7 +651,7 @@ const Admins = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Company Address</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Company Address</label>
                     <textarea
                       className="input resize-none"
                       rows={2}
@@ -654,7 +662,7 @@ const Admins = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Phone</label>
                       <input
                         className="input"
                         placeholder="Contact number"
@@ -663,7 +671,7 @@ const Admins = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Support Email</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Support Email</label>
                       <input
                         className="input"
                         type="email"
@@ -674,7 +682,7 @@ const Admins = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Receipt Footer Message</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1.5">Receipt Footer Message</label>
                     <input
                       className="input"
                       placeholder="e.g. Thank you for your payment!"
@@ -687,7 +695,7 @@ const Admins = () => {
             </form>
 
             {/* Sticky Footer */}
-            <div className="flex gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex-shrink-0">
+            <div className="flex gap-3 px-5 py-4 border-t border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 rounded-b-xl flex-shrink-0">
               <button
                 type="submit"
                 form="adminForm"

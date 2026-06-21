@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Zap, 
-  Shield, 
-  BarChart3, 
-  Smartphone, 
+import { useTheme } from '../context/ThemeContext';
+import {
+  Zap,
+  Shield,
+  BarChart3,
+  Smartphone,
   CheckCircle,
   ArrowRight,
   Menu,
@@ -18,11 +19,14 @@ import {
   Download,
   Globe,
   MessageCircle,
-  Clock
+  Clock,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // FAQs
@@ -46,55 +50,70 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 scroll-smooth">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-100 selection:text-indigo-900 scroll-smooth">
       
       {/* Navbar */}
-      <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-lg border-b border-slate-200 transition-all duration-300">
+      <nav className="fixed w-full z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
               <Zap className="text-white" size={24} />
             </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300">
               CableFlow
             </span>
           </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Features</a>
-            <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">How it Works</a>
-            <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">FAQ</a>
-            <button 
+            <a href="#features" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 transition-colors">Features</a>
+            <a href="#how-it-works" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 transition-colors">How it Works</a>
+            <a href="#faq" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 transition-colors">FAQ</a>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
+            </button>
+            <button
               onClick={() => navigate('/portal')}
-              className="px-5 py-2 text-indigo-600 text-sm font-semibold rounded-full hover:bg-indigo-50 transition-colors border border-indigo-200"
+              className="px-5 py-2 text-indigo-600 text-sm font-semibold rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors border border-indigo-200 dark:border-indigo-700"
             >
               Customer Portal
             </button>
-            <button 
+            <button
               onClick={() => navigate('/login')}
-              className="px-6 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-200"
+              className="px-6 py-2.5 bg-slate-900 dark:bg-indigo-600 text-white text-sm font-semibold rounded-full hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-black/15"
             >
               Console Login
             </button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden text-slate-600"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile: theme toggle + hamburger */}
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
+            </button>
+            <button
+              className="text-slate-600 dark:text-slate-300"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu Dropdown */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 p-6 absolute w-full shadow-xl animate-slide-down">
+          <div className="md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 p-6 absolute w-full shadow-xl animate-slide-down">
              <div className="flex flex-col gap-4">
-                <a href="#features" className="text-base font-medium text-slate-600 py-2" onClick={() => setIsMenuOpen(false)}>Features</a>
-                <a href="#how-it-works" className="text-base font-medium text-slate-600 py-2" onClick={() => setIsMenuOpen(false)}>How it Works</a>
-                <a href="#faq" className="text-base font-medium text-slate-600 py-2" onClick={() => setIsMenuOpen(false)}>FAQ</a>
+                <a href="#features" className="text-base font-medium text-slate-600 dark:text-slate-300 py-2" onClick={() => setIsMenuOpen(false)}>Features</a>
+                <a href="#how-it-works" className="text-base font-medium text-slate-600 dark:text-slate-300 py-2" onClick={() => setIsMenuOpen(false)}>How it Works</a>
+                <a href="#faq" className="text-base font-medium text-slate-600 dark:text-slate-300 py-2" onClick={() => setIsMenuOpen(false)}>FAQ</a>
                 <button 
                   onClick={() => { navigate('/portal'); setIsMenuOpen(false); }}
                   className="w-full py-3 bg-indigo-50 text-indigo-600 font-semibold rounded-lg border border-indigo-200"
@@ -113,7 +132,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 md:pt-48 md:pb-32 px-6 relative overflow-hidden bg-white">
+      <section className="pt-32 pb-20 md:pt-48 md:pb-32 px-6 relative overflow-hidden bg-white dark:bg-slate-950">
          {/* Background Decoration */}
          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-50/80 to-transparent -z-10"></div>
          <div className="absolute -top-24 -right-24 w-[600px] h-[600px] bg-indigo-400/10 rounded-full blur-3xl -z-10"></div>
@@ -122,31 +141,31 @@ const LandingPage = () => {
          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
             {/* Left Content */}
             <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-indigo-100 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-8 shadow-sm">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider mb-8 shadow-sm">
                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> PWA: Works Offline
                 </div>
                 
-                <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-6 leading-[1.1]">
+                <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6 leading-[1.1]">
                   Manage Your <br/>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-emerald-500">
                      Cable Business.
                   </span>
                 </h1>
                 
-                <p className="text-lg md:text-xl text-slate-500 mb-10 leading-relaxed">
+                <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 mb-10 leading-relaxed">
                   The all-in-one platform for Cable TV Operators. Generate bills, manage subscriptions, collect payments offline, and give your customers a Self-Service Portal.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4">
                    <button 
                      onClick={() => navigate('/login')}
-                     className="px-8 py-4 bg-slate-900 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
+                     className="px-8 py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
                    >
                      Get Started Now <ArrowRight size={20} />
                    </button>
                    <button 
                      onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })}
-                     className="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                     className="px-8 py-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
                    >
                      Explore Features
                    </button>
@@ -162,7 +181,7 @@ const LandingPage = () => {
                         <div className="flex gap-1 text-amber-500 mb-1">
                             {[1,2,3,4,5].map(i => <span key={i}>★</span>)}
                         </div>
-                        <p className="text-sm text-slate-600 font-medium">Trusted by Local Operators</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Trusted by Local Operators</p>
                     </div>
                 </div>
             </div>
@@ -177,13 +196,13 @@ const LandingPage = () => {
                 />
                 
                 {/* Floating Card 1 */}
-                <div className="absolute -bottom-8 -left-8 bg-white p-4 rounded-xl shadow-xl border border-slate-100 flex items-center gap-4 animate-[bounceSlow_3s_ease-in-out_infinite]">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                <div className="absolute -bottom-8 -left-8 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 flex items-center gap-4 animate-[bounceSlow_3s_ease-in-out_infinite]">
+                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                         <CheckCircle size={24} />
                     </div>
                     <div>
-                        <p className="text-xs text-slate-500 font-bold uppercase">Payment Received</p>
-                        <p className="text-lg font-bold text-slate-900">₹650.00</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Payment Received</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-white">₹650.00</p>
                     </div>
                 </div>
             </div>
@@ -213,12 +232,12 @@ const LandingPage = () => {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-24 bg-slate-50">
+      <section id="features" className="py-24 bg-slate-50 dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-6">
            <div className="text-center mb-16">
               <span className="text-indigo-600 font-bold tracking-wide uppercase text-sm">Features</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4">Everything to Run Your Cable Network</h2>
-              <p className="text-slate-500 max-w-xl mx-auto text-lg">Powerful tools built specifically for LCOs to streamline operations.</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mt-2 mb-4">Everything to Run Your Cable Network</h2>
+              <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto text-lg">Powerful tools built specifically for LCOs to streamline operations.</p>
            </div>
            
            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -260,12 +279,12 @@ const LandingPage = () => {
                     color: "bg-amber-500"
                  }
               ].map((feature, i) => (
-                 <div key={i} className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 group">
+                 <div key={i} className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 dark:border-slate-700 group">
                     <div className={`w-14 h-14 ${feature.color} bg-opacity-10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                        <feature.icon className={feature.color.replace('bg-', 'text-')} size={28} />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-                    <p className="text-slate-600 leading-relaxed">{feature.desc}</p>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{feature.title}</h3>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
                  </div>
               ))}
            </div>
@@ -273,12 +292,12 @@ const LandingPage = () => {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-24 bg-white relative overflow-hidden">
+      <section id="how-it-works" className="py-24 bg-white dark:bg-slate-950 relative overflow-hidden">
          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
          <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">How It Works</h2>
-               <p className="text-slate-500">Simplify your workflow in three easy steps.</p>
+               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">How It Works</h2>
+               <p className="text-slate-500 dark:text-slate-400">Simplify your workflow in three easy steps.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-12 relative">
@@ -303,11 +322,11 @@ const LandingPage = () => {
                   }
                ].map((step, i) => (
                   <div key={i} className="text-center relative">
-                     <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg">
+                     <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white dark:border-slate-800 shadow-lg">
                         <step.icon className="text-indigo-600" size={32} />
                      </div>
-                     <h3 className="text-xl font-bold text-slate-900 mb-3">{step.title}</h3>
-                     <p className="text-slate-500 max-w-xs mx-auto">{step.desc}</p>
+                     <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{step.title}</h3>
+                     <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">{step.desc}</p>
                   </div>
                ))}
             </div>
@@ -315,20 +334,20 @@ const LandingPage = () => {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-24 bg-slate-50">
+      <section id="faq" className="py-24 bg-slate-50 dark:bg-slate-900">
          <div className="max-w-3xl mx-auto px-6">
             <div className="text-center mb-16">
-               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Frequently Asked Questions</h2>
+               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">Frequently Asked Questions</h2>
             </div>
             
             <div className="space-y-6">
                {faqs.map((faq, i) => (
-                  <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-                     <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-start gap-3">
+                  <div key={i} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:shadow-md transition-shadow">
+                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 flex items-start gap-3">
                         <MessageCircle className="text-indigo-500 shrink-0 mt-1" size={20} />
                         {faq.q}
                      </h3>
-                     <p className="text-slate-600 pl-8">{faq.a}</p>
+                     <p className="text-slate-600 dark:text-slate-400 pl-8">{faq.a}</p>
                   </div>
                ))}
             </div>

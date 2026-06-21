@@ -86,7 +86,7 @@ const ReceiptTemplate = forwardRef(({ payment, settings }, ref) => {
             <span className="font-bold text-slate-700">₹{payment.paidAmount?.toFixed(0)}</span>
           </div>
           
-          <div className="bg-indigo-500 text-white p-4 rounded-lg flex justify-between items-center shadow-lg shadow-indigo-200">
+          <div className="bg-indigo-500 text-white p-4 rounded-lg flex justify-between items-center shadow-lg shadow-indigo-500/20">
             <span className="text-xs font-bold tracking-widest uppercase">Net Amount Paid</span>
             <span className="text-2xl font-extrabold">₹{payment.paidAmount?.toFixed(0)}</span>
           </div>

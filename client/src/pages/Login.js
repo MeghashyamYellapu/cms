@@ -46,17 +46,17 @@ const Login = () => {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-violet-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 px-4 py-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl mb-4 shadow-lg shadow-indigo-200">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl mb-4 shadow-lg shadow-indigo-500/20">
             <Lock className="text-white" size={28} />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Cable Billing System
           </h1>
-          <p className="text-gray-500 text-sm sm:text-base">Sign in to manage your cable operations</p>
+          <p className="text-gray-500 dark:text-slate-400 text-sm sm:text-base">Sign in to manage your cable operations</p>
         </div>
 
         {/* Login Form */}
@@ -64,7 +64,7 @@ const Login = () => {
           <form onSubmit={formik.handleSubmit} className="space-y-6">
             {/* Email or Phone */}
             <div>
-              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                 Email or Phone Number
               </label>
               <div className="relative">
@@ -95,7 +95,7 @@ const Login = () => {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                 Password
               </label>
               <div className="relative">

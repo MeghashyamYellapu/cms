@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { customerAPI, billAPI, paymentAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { BarChart3, Download, FileText, Users, DollarSign, AlertTriangle, X, ArrowLeft } from 'lucide-react';
+import { BarChart3, Download, FileText, Users, DollarSign, AlertTriangle, X, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const Reports = () => {
+  const tableScrollRef = useRef(null);
   const [reportType, setReportType] = useState('customers');
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState(null);
@@ -246,21 +247,21 @@ const Reports = () => {
       {/* Header */}
       <div className="flex items-center gap-2 sm:gap-4">
         {activeDetailView && (
-          <button 
+          <button
             onClick={() => setActiveDetailView(null)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
           >
             <ArrowLeft size={24} />
           </button>
         )}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             {activeDetailView === 'ledger' && 'Customer Ledger'}
             {activeDetailView === 'revenue' && 'Revenue Analysis'}
             {activeDetailView === 'outstanding' && 'Outstanding Dues'}
             {!activeDetailView && 'Reports'}
           </h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">
+          <p className="text-gray-600 dark:text-slate-300 mt-1 text-sm sm:text-base">
             {activeDetailView ? 'Detailed view' : 'Generate and export business reports'}
           </p>
         </div>
@@ -272,7 +273,7 @@ const Reports = () => {
           <div className="card">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 sm:mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                   Report Type
                 </label>
                 <select
@@ -289,7 +290,7 @@ const Reports = () => {
               {reportType === 'payments' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                       Start Date
                     </label>
                     <input
@@ -300,7 +301,7 @@ const Reports = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                       End Date
                     </label>
                     <input
@@ -346,11 +347,11 @@ const Reports = () => {
                     if (typeof value === 'object') return null;
                     
                     return (
-                      <div key={key} className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border">
-                        <p className="text-sm text-gray-600 capitalize">
+                      <div key={key} className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-700 dark:to-slate-800 p-4 rounded-xl border dark:border-slate-600">
+                        <p className="text-sm text-gray-600 dark:text-slate-300 capitalize">
                           {key.replace(/([A-Z])/g, ' $1').trim()}
                         </p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                           {typeof value === 'number' 
                             ? (key.toLowerCase().includes('amount') || key.toLowerCase().includes('payable') || key.toLowerCase().includes('paid') || key.toLowerCase().includes('pending'))
                               ? `₹${value.toLocaleString('en-IN')}`
@@ -378,7 +379,7 @@ const Reports = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Customer Ledger</h3>
-                  <p className="text-gray-600 text-sm">View all customers with balances</p>
+                  <p className="text-gray-600 dark:text-slate-300 text-sm">View all customers with balances</p>
                 </div>
               </div>
             </div>
@@ -393,7 +394,7 @@ const Reports = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Revenue Analysis</h3>
-                  <p className="text-gray-600 text-sm">Daily collection trends</p>
+                  <p className="text-gray-600 dark:text-slate-300 text-sm">Daily collection trends</p>
                 </div>
               </div>
             </div>
@@ -408,7 +409,7 @@ const Reports = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Outstanding Dues</h3>
-                  <p className="text-gray-600 text-sm">Track pending payments</p>
+                  <p className="text-gray-600 dark:text-slate-300 text-sm">Track pending payments</p>
                 </div>
               </div>
             </div>
@@ -423,15 +424,15 @@ const Reports = () => {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
             <div>
               {activeDetailView === 'outstanding' && (
-                <div className="bg-red-50 border border-red-200 px-4 py-2 rounded-lg">
-                  <span className="text-red-800 font-medium text-sm">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg">
+                  <span className="text-red-800 dark:text-red-300 font-medium text-sm">
                     Total Outstanding: ₹{outstandingTotals.total.toLocaleString('en-IN')} ({outstandingTotals.count} bills)
                   </span>
                 </div>
               )}
               {activeDetailView === 'revenue' && (
-                <div className="bg-green-50 border border-green-200 px-4 py-2 rounded-lg">
-                  <span className="text-green-800 font-medium text-sm">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-2 rounded-lg">
+                  <span className="text-green-800 dark:text-green-300 font-medium text-sm">
                     Total Revenue: ₹{revenueTotals.total.toLocaleString('en-IN')} ({revenueTotals.transactions} transactions)
                   </span>
                 </div>
@@ -457,20 +458,20 @@ const Reports = () => {
           {activeDetailView === 'ledger' && !detailLoading && (
             <>
               {/* Mobile Card View */}
-              <div className="block md:hidden space-y-3">
+              <div className="block lg:hidden space-y-3">
                 {detailData.map(customer => (
-                  <div key={customer._id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div key={customer._id} className="bg-gray-50 dark:bg-slate-700 rounded-xl p-4 border border-gray-100 dark:border-slate-600">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="font-semibold text-gray-900">{customer.name}</p>
-                        <p className="text-xs text-gray-500">{customer.customerId} • {customer.phoneNumber}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{customer.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{customer.customerId} • {customer.phoneNumber}</p>
                       </div>
                       <span className={`badge ${customer.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>{customer.status}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm mt-2">
-                      <span className="text-gray-500">Area: <span className="text-gray-800 font-medium">{customer.area}</span></span>
-                      <span className="text-gray-500">Service: <span className="badge badge-info text-xs">{customer.serviceType}</span></span>
-                      <span className="text-gray-500">Package: <span className="text-gray-800 font-medium">₹{customer.packageAmount}</span></span>
+                      <span className="text-gray-500 dark:text-slate-400">Area: <span className="text-gray-800 dark:text-slate-100 font-medium">{customer.area}</span></span>
+                      <span className="text-gray-500 dark:text-slate-400">Service: <span className="badge badge-info text-xs">{customer.serviceType}</span></span>
+                      <span className="text-gray-500 dark:text-slate-400">Package: <span className="text-gray-800 dark:text-slate-100 font-medium">₹{customer.packageAmount}</span></span>
                       <span className={customer.previousBalance > 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
                         Balance: {customer.previousBalance > 0 ? `₹${customer.previousBalance}` : 'Clear'}
                       </span>
@@ -479,8 +480,10 @@ const Reports = () => {
                 ))}
               </div>
               {/* Desktop Table */}
-              <div className="hidden md:block table-container">
-                <table className="table">
+              <div className="hidden lg:block">
+
+                <div ref={tableScrollRef} style={{overflowX: 'scroll', width: '100%'}}>
+                <table className="table w-full" style={{minWidth: '700px'}}>
                   <thead>
                     <tr>
                       <th>Customer ID</th>
@@ -514,6 +517,7 @@ const Reports = () => {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </>
           )}
@@ -522,22 +526,24 @@ const Reports = () => {
           {activeDetailView === 'revenue' && !detailLoading && (
             <>
               {/* Mobile Card View */}
-              <div className="block md:hidden space-y-3">
+              <div className="block lg:hidden space-y-3">
                 {detailData.length > 0 ? detailData.map((item, idx) => (
-                  <div key={idx} className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex justify-between items-center">
+                  <div key={idx} className="bg-gray-50 dark:bg-slate-700 rounded-xl p-4 border border-gray-100 dark:border-slate-600 flex justify-between items-center">
                     <div>
-                      <p className="font-semibold text-gray-900">{item._id}</p>
-                      <p className="text-xs text-gray-500">{item.count} transaction{item.count !== 1 ? 's' : ''}</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">{item._id}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{item.count} transaction{item.count !== 1 ? 's' : ''}</p>
                     </div>
                     <p className="text-green-600 font-bold text-lg">₹{item.amount?.toLocaleString('en-IN')}</p>
                   </div>
                 )) : (
-                  <div className="text-center py-12 text-gray-500">No revenue data for the selected period</div>
+                  <div className="text-center py-12 text-gray-500 dark:text-slate-400">No revenue data for the selected period</div>
                 )}
               </div>
               {/* Desktop Table */}
-              <div className="hidden md:block table-container">
-                <table className="table">
+              <div className="hidden lg:block">
+
+                <div ref={tableScrollRef} style={{overflowX: 'scroll', width: '100%'}}>
+                <table className="table w-full" style={{minWidth: '700px'}}>
                   <thead>
                     <tr>
                       <th>Date</th>
@@ -554,13 +560,14 @@ const Reports = () => {
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan="3" className="text-center py-8 text-gray-500">
+                        <td colSpan="3" className="text-center py-8 text-gray-500 dark:text-slate-400">
                           No revenue data for the selected period
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
             </>
           )}
@@ -569,39 +576,41 @@ const Reports = () => {
           {activeDetailView === 'outstanding' && !detailLoading && (
             <>
               {/* Mobile Card View */}
-              <div className="block md:hidden space-y-3">
+              <div className="block lg:hidden space-y-3">
                 {detailData.length > 0 ? detailData.map(bill => (
-                  <div key={bill._id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div key={bill._id} className="bg-gray-50 dark:bg-slate-700 rounded-xl p-4 border border-gray-100 dark:border-slate-600">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="font-semibold text-gray-900">{bill.customerId?.name || 'N/A'}</p>
-                        <p className="text-xs text-gray-500">{bill.customerId?.customerId} • {bill.customerId?.phoneNumber}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{bill.customerId?.name || 'N/A'}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{bill.customerId?.customerId} • {bill.customerId?.phoneNumber}</p>
                       </div>
                       <span className={`badge ${bill.status === 'Partial' ? 'badge-warning' : 'badge-danger'}`}>{bill.status}</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-sm mt-3 text-center">
-                      <div className="bg-white rounded-lg p-2">
-                        <p className="text-xs text-gray-500">Total</p>
-                        <p className="font-semibold text-gray-900">₹{bill.totalPayable}</p>
+                      <div className="bg-white dark:bg-slate-800 rounded-lg p-2">
+                        <p className="text-xs text-gray-500 dark:text-slate-400">Total</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">₹{bill.totalPayable}</p>
                       </div>
-                      <div className="bg-white rounded-lg p-2">
-                        <p className="text-xs text-gray-500">Paid</p>
+                      <div className="bg-white dark:bg-slate-800 rounded-lg p-2">
+                        <p className="text-xs text-gray-500 dark:text-slate-400">Paid</p>
                         <p className="font-semibold text-green-600">₹{bill.paidAmount}</p>
                       </div>
-                      <div className="bg-white rounded-lg p-2">
-                        <p className="text-xs text-gray-500">Remaining</p>
+                      <div className="bg-white dark:bg-slate-800 rounded-lg p-2">
+                        <p className="text-xs text-gray-500 dark:text-slate-400">Remaining</p>
                         <p className="font-semibold text-red-600">₹{bill.remainingBalance}</p>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-2 text-center">{bill.month} {bill.year}</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-2 text-center">{bill.month} {bill.year}</p>
                   </div>
                 )) : (
-                  <div className="text-center py-12 text-gray-500">No outstanding dues! All bills are paid.</div>
+                  <div className="text-center py-12 text-gray-500 dark:text-slate-400">No outstanding dues! All bills are paid.</div>
                 )}
               </div>
               {/* Desktop Table */}
-              <div className="hidden md:block table-container">
-                <table className="table">
+              <div className="hidden lg:block">
+
+                <div ref={tableScrollRef} style={{overflowX: 'scroll', width: '100%'}}>
+                <table className="table w-full" style={{minWidth: '700px'}}>
                   <thead>
                     <tr>
                       <th>Customer</th>
@@ -619,7 +628,7 @@ const Reports = () => {
                         <td>
                           <div>
                             <p className="font-medium">{bill.customerId?.name || 'N/A'}</p>
-                            <p className="text-xs text-gray-500">{bill.customerId?.customerId}</p>
+                            <p className="text-xs text-gray-500 dark:text-slate-400">{bill.customerId?.customerId}</p>
                           </div>
                         </td>
                         <td>{bill.customerId?.phoneNumber || 'N/A'}</td>
@@ -635,13 +644,14 @@ const Reports = () => {
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan="7" className="text-center py-8 text-gray-500">
+                        <td colSpan="7" className="text-center py-8 text-gray-500 dark:text-slate-400">
                           No outstanding dues! All bills are paid.
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
             </>
           )}

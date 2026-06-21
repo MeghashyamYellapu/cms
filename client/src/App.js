@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import PrivateRoute from './components/PrivateRoute';
 import Sidebar from './components/Sidebar';
 import InstallPrompt from './components/InstallPrompt';
@@ -43,9 +44,10 @@ const AgentGuard = ({ children }) => {
 
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
           <InstallPrompt />
           <OfflineIndicator />
           <Toaster
@@ -84,7 +86,10 @@ function App() {
                 <PrivateRoute>
                   <div className="flex">
                     <Sidebar />
-                    <main className="flex-1 lg:ml-64 transition-all duration-300 pt-14 lg:pt-0 min-h-screen">
+                    <main
+                      className="flex-1 min-w-0 transition-all duration-300 pt-14 lg:pt-0 min-h-screen overflow-x-hidden"
+                      style={{ marginLeft: 'var(--sidebar-width, 0px)' }}
+                    >
                       <Routes>
                         <Route path="/dashboard" element={<DashboardWrapper />} />
                         <Route path="/admins" element={<AgentGuard><Admins /></AgentGuard>} />
@@ -106,6 +111,7 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

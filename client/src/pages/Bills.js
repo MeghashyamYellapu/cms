@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { billAPI, customerAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { FileText, Plus, Calendar, ChevronDown, ChevronUp, User, X, Search, IndianRupee } from 'lucide-react';
+import { FileText, Plus, Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, User, X, Search, IndianRupee } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Bills = () => {
+  const tableScrollRef = useRef(null);
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
@@ -101,8 +102,8 @@ const Bills = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Bills</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage monthly billing</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Bills</h1>
+          <p className="text-gray-600 dark:text-slate-300 mt-1 text-sm sm:text-base">Manage monthly billing</p>
         </div>
         <button
           onClick={() => setShowGenerateModal(true)}
@@ -116,21 +117,21 @@ const Bills = () => {
       {/* Summary Cards */}
       {bills.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Total Bills</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide">Total Bills</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.total}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-green-200 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-green-200 dark:border-green-800 shadow-sm">
             <p className="text-xs text-green-600 uppercase tracking-wide">Collected</p>
             <p className="text-2xl font-bold text-green-600 mt-1">₹{stats.collectedAmount.toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-red-200 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-red-200 dark:border-red-800 shadow-sm">
             <p className="text-xs text-red-600 uppercase tracking-wide">Pending</p>
             <p className="text-2xl font-bold text-red-600 mt-1">₹{(stats.totalAmount - stats.collectedAmount).toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Total Amount</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">₹{stats.totalAmount.toLocaleString()}</p>
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide">Total Amount</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">₹{stats.totalAmount.toLocaleString()}</p>
           </div>
         </div>
       )}
@@ -168,13 +169,13 @@ const Bills = () => {
             <div className="loading h-8 w-8"></div>
           </div>
         ) : bills.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 p-4">
+          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-slate-400 p-4">
             <FileText size={48} className="mb-4" />
             <p className="text-lg">No bills generated yet</p>
             <p className="text-sm text-center">Click "Generate Bills" to create monthly bills for all active customers</p>
           </div>
         ) : filteredBills.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 p-4">
+          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-slate-400 p-4">
             <Search size={48} className="mb-4" />
             <p className="text-lg">No bills match your search</p>
             <p className="text-sm">Try adjusting your filters</p>
@@ -182,9 +183,9 @@ const Bills = () => {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="lg:hidden divide-y divide-gray-100">
+            <div className="lg:hidden divide-y divide-gray-100 dark:divide-slate-700">
               {filteredBills.map((bill) => (
-                <div key={bill._id} className="bg-white">
+                <div key={bill._id} className="bg-white dark:bg-slate-800">
                   {/* Card Header - Always visible */}
                   <div 
                     className="p-4 cursor-pointer"
@@ -192,8 +193,8 @@ const Bills = () => {
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{bill.customerId?.name}</p>
-                        <p className="text-xs text-gray-500">{bill.customerId?.customerId}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{bill.customerId?.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{bill.customerId?.customerId}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusBgColor(bill.status)}`}>
                         {bill.status}
@@ -201,14 +202,14 @@ const Bills = () => {
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
                         <Calendar size={14} />
                         <span>{bill.month} {bill.year}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <p className="text-xs text-gray-500">Total</p>
-                          <p className="font-bold text-gray-900">₹{bill.totalPayable}</p>
+                          <p className="text-xs text-gray-500 dark:text-slate-400">Total</p>
+                          <p className="font-bold text-gray-900 dark:text-white">₹{bill.totalPayable}</p>
                         </div>
                         {expandedBillId === bill._id ? (
                           <ChevronUp size={18} className="text-gray-400" />
@@ -221,31 +222,31 @@ const Bills = () => {
                   
                   {/* Expanded Details */}
                   {expandedBillId === bill._id && (
-                    <div className="border-t border-gray-100 bg-gray-50 p-4">
+                    <div className="border-t border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 p-4">
                       <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="bg-white p-3 rounded-lg">
-                          <p className="text-xs text-gray-500">Package Amount</p>
-                          <p className="font-semibold text-gray-900">₹{bill.packageAmount}</p>
+                        <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                          <p className="text-xs text-gray-500 dark:text-slate-400">Package Amount</p>
+                          <p className="font-semibold text-gray-900 dark:text-white">₹{bill.packageAmount}</p>
                         </div>
-                        <div className="bg-white p-3 rounded-lg">
-                          <p className="text-xs text-gray-500">Previous Balance</p>
+                        <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                          <p className="text-xs text-gray-500 dark:text-slate-400">Previous Balance</p>
                           <p className={`font-semibold ${bill.previousBalance > 0 ? 'text-red-600' : 'text-gray-900'}`}>
                             ₹{bill.previousBalance}
                           </p>
                         </div>
-                        <div className="bg-white p-3 rounded-lg">
-                          <p className="text-xs text-gray-500">Paid Amount</p>
+                        <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                          <p className="text-xs text-gray-500 dark:text-slate-400">Paid Amount</p>
                           <p className="font-semibold text-green-600">₹{bill.paidAmount}</p>
                         </div>
-                        <div className="bg-white p-3 rounded-lg">
-                          <p className="text-xs text-gray-500">Remaining</p>
+                        <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                          <p className="text-xs text-gray-500 dark:text-slate-400">Remaining</p>
                           <p className={`font-semibold ${bill.remainingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                             ₹{bill.remainingBalance}
                           </p>
                         </div>
                       </div>
                       {bill.customerId?.phoneNumber && (
-                        <p className="text-xs text-gray-500 mt-3 text-center">
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mt-3 text-center">
                           📞 {bill.customerId.phoneNumber}
                         </p>
                       )}
@@ -256,8 +257,10 @@ const Bills = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="table min-w-full">
+            <div className="hidden lg:block">
+
+              <div ref={tableScrollRef} style={{overflowX: 'scroll', width: '100%'}}>
+              <table className="table w-full" style={{minWidth: '800px'}}>
                 <thead>
                   <tr>
                     <th>Customer</th>
@@ -276,7 +279,7 @@ const Bills = () => {
                       <td>
                         <div>
                           <p className="font-medium">{bill.customerId?.name}</p>
-                          <p className="text-sm text-gray-500">{bill.customerId?.customerId}</p>
+                          <p className="text-sm text-gray-500 dark:text-slate-400">{bill.customerId?.customerId}</p>
                         </div>
                       </td>
                       <td>{bill.month} {bill.year}</td>
@@ -298,6 +301,7 @@ const Bills = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </>
         )}
@@ -306,9 +310,9 @@ const Bills = () => {
       {/* Generate Bills Modal */}
       {showGenerateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl md:rounded-xl w-full md:max-w-md max-h-[90vh] overflow-hidden flex flex-col animate-slide-up md:animate-none md:mx-4">
+          <div className="bg-white dark:bg-slate-800 rounded-t-2xl md:rounded-xl w-full md:max-w-md max-h-[90vh] overflow-hidden flex flex-col animate-slide-up md:animate-none md:mx-4">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
               <div>
                 <h2 className="text-xl font-bold">Generate Bills</h2>
                 <p className="text-sm text-indigo-100">Create monthly bills</p>
@@ -325,7 +329,7 @@ const Bills = () => {
             <div className="flex-1 overflow-y-auto p-4">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Month
                   </label>
                   <select
@@ -340,7 +344,7 @@ const Bills = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
                     Year
                   </label>
                   <input
@@ -369,7 +373,7 @@ const Bills = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+            <div className="p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 flex gap-3">
               <button
                 onClick={handleGenerateBills}
                 className={`btn btn-primary flex-1 py-3 text-base font-semibold ${generating ? 'opacity-70' : ''}`}

@@ -66,7 +66,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-slate-900">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
       </div>
     );
@@ -78,36 +78,40 @@ const Dashboard = () => {
       value: `₹${(stats.payments?.totalAmount || 0).toLocaleString('en-IN')}`,
       icon: DollarSign,
       gradient: 'from-indigo-500 to-purple-600',
-      shadow: 'shadow-indigo-200',
+      shadow: 'shadow-indigo-500/20',
+      link: '/payments',
     },
     {
       title: 'Total Customers',
       value: stats.customers?.totalCustomers || 0,
       icon: Users,
       gradient: 'from-blue-500 to-cyan-500',
-      shadow: 'shadow-blue-200',
+      shadow: 'shadow-blue-500/20',
+      link: '/customers',
     },
     {
       title: 'Active Users',
       value: stats.customers?.activeCustomers || 0,
       icon: UserCheck,
       gradient: 'from-emerald-500 to-teal-500',
-      shadow: 'shadow-emerald-200',
+      shadow: 'shadow-emerald-500/20',
+      link: '/customers',
     },
     {
       title: 'Pending Bills',
       value: `₹${(stats.bills?.totalPending || 0).toLocaleString('en-IN')}`,
       icon: AlertOctagon,
       gradient: 'from-orange-500 to-red-500',
-      shadow: 'shadow-orange-200',
+      shadow: 'shadow-orange-500/20',
+      link: '/bills',
     },
   ];
 
   const secondaryStats = [
-    { label: 'Paid Bills', value: stats.bills?.paidBills, icon: CreditCard, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-    { label: 'Unpaid Bills', value: stats.bills?.unpaidBills, icon: AlertOctagon, color: 'text-red-600', bg: 'bg-red-100' },
-    { label: 'Partial Paid', value: stats.bills?.partialBills, icon: Activity, color: 'text-yellow-600', bg: 'bg-yellow-100' },
-    { label: 'Inactive', value: stats.customers?.inactiveCustomers, icon: UserX, color: 'text-slate-600', bg: 'bg-slate-100' },
+    { label: 'Paid Bills', value: stats.bills?.paidBills, icon: CreditCard, color: 'text-emerald-600', bg: 'bg-emerald-100', link: '/bills' },
+    { label: 'Unpaid Bills', value: stats.bills?.unpaidBills, icon: AlertOctagon, color: 'text-red-600', bg: 'bg-red-100', link: '/bills' },
+    { label: 'Partial Paid', value: stats.bills?.partialBills, icon: Activity, color: 'text-yellow-600', bg: 'bg-yellow-100', link: '/bills' },
+    { label: 'Inactive', value: stats.customers?.inactiveCustomers, icon: UserX, color: 'text-slate-600', bg: 'bg-slate-100', link: '/customers' },
   ];
 
   // Charts Config
@@ -120,29 +124,29 @@ const Dashboard = () => {
   const dailyCollections = stats.payments?.dailyCollections?.reverse().slice(0, 7) || [];
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-12">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-slate-900 pb-12">
       {/* Hero Header */}
-      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10 mb-6 sm:mb-8">
+      <div className="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-700 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10 mb-6 sm:mb-8">
         <div className="max-w-7xl mx-auto flex flex-col gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-slate-300">
               Dashboard
             </h1>
-            <p className="text-gray-500 mt-2 text-sm sm:text-base lg:text-lg">
-              Welcome back, <span className="font-semibold text-gray-800">{admin?.companyDetails?.name || admin?.name}</span>! Here's what's happening today.
+            <p className="text-gray-500 dark:text-slate-400 mt-2 text-sm sm:text-base lg:text-lg">
+              Welcome back, <span className="font-semibold text-gray-800 dark:text-white">{admin?.companyDetails?.name || admin?.name}</span>! Here's what's happening today.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-             <button 
-                onClick={() => navigate('/payments')} 
-                className="btn bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl transition-all hover:scale-105 w-full sm:w-auto"
+             <button
+                onClick={() => navigate('/payments')}
+                className="btn bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl transition-all hover:scale-105 w-full sm:w-auto"
              >
                 <PlusCircle size={20} />
                 <span className="text-sm sm:text-base">New Payment</span>
              </button>
-             <button 
-                onClick={() => navigate('/bills')} 
-                className="btn bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl transition-all w-full sm:w-auto"
+             <button
+                onClick={() => navigate('/bills')}
+                className="btn bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl transition-all w-full sm:w-auto"
              >
                 <FileText size={20} />
                 <span className="text-sm sm:text-base">Manage Bills</span>
@@ -157,9 +161,10 @@ const Dashboard = () => {
           {mainStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div 
+              <div
                 key={index}
-                className={`relative overflow-hidden rounded-2xl p-4 sm:p-6 bg-gradient-to-br ${stat.gradient} text-white shadow-xl ${stat.shadow} transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl`}
+                onClick={() => navigate(stat.link)}
+                className={`relative overflow-hidden rounded-2xl p-4 sm:p-6 bg-gradient-to-br ${stat.gradient} text-white shadow-xl ${stat.shadow} transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer`}
               >
                 <div className="relative z-10">
                     <div className="flex justify-between items-start mb-3 sm:mb-4">
@@ -185,26 +190,26 @@ const Dashboard = () => {
               {/* Secondary Grid */}
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {secondaryStats.map((stat, i) => (
-                      <div key={i} className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div key={i} onClick={() => navigate(stat.link)} className="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                           <div className={`w-8 h-8 sm:w-10 sm:h-10 ${stat.bg} ${stat.color} rounded-lg flex items-center justify-center mb-2 sm:mb-3`}>
                               <stat.icon size={18} className="sm:w-5 sm:h-5" />
                           </div>
-                          <h4 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1">{stat.value || 0}</h4>
-                          <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{stat.label}</p>
+                          <h4 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-1">{stat.value || 0}</h4>
+                          <p className="text-xs text-gray-500 dark:text-slate-400 font-medium uppercase tracking-wide">{stat.label}</p>
                       </div>
                   ))}
               </div>
 
               {/* Quick Areas */}
               {stats.customers?.areaStats && stats.customers.areaStats.length > 0 && (
-                <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
-                    <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-gray-100 dark:border-slate-700 shadow-sm">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
                         <TrendingUp size={18} className="text-indigo-500 sm:w-5 sm:h-5" /> Top Areas
                     </h3>
                     <div className="space-y-3 sm:space-y-4">
                         {stats.customers.areaStats.slice(0, 3).map((area, i) => (
                             <div key={i} className="flex justify-between items-center group">
-                                <span className="text-sm sm:text-base text-gray-600 font-medium group-hover:text-indigo-600 transition-colors">{area._id}</span>
+                                <span className="text-sm sm:text-base text-gray-600 dark:text-slate-300 font-medium group-hover:text-indigo-600 transition-colors">{area._id}</span>
                                 <span className="bg-indigo-50 text-indigo-700 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold">{area.count}</span>
                             </div>
                         ))}
@@ -217,9 +222,9 @@ const Dashboard = () => {
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               
               {/* Revenue Chart */}
-              <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-gray-100 dark:border-slate-700 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-800">Revenue Trend (Last 7 Days)</h3>
+                      <h3 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white">Revenue Trend (Last 7 Days)</h3>
                       <span className="text-xs sm:text-sm text-green-500 font-medium bg-green-50 px-2 sm:px-3 py-1 rounded-full w-fit">
                           + Live Updates
                       </span>
@@ -262,7 +267,7 @@ const Dashboard = () => {
                         </ResponsiveContainer>
                     </div>
                   ) : (
-                    <div className="h-[250px] sm:h-[300px] flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl text-sm">
+                    <div className="h-[250px] sm:h-[300px] flex items-center justify-center text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-700 rounded-xl text-sm">
                         No revenue data available
                     </div>
                   )}
@@ -271,8 +276,8 @@ const Dashboard = () => {
               {/* Bottom Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   {/* Service Types */}
-                  <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Service Distribution</h3>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-gray-100 dark:border-slate-700 shadow-sm">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white mb-3 sm:mb-4">Service Distribution</h3>
                       <div className="h-[180px] sm:h-[200px]">
                           {serviceTypeData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
@@ -299,7 +304,7 @@ const Dashboard = () => {
                           {serviceTypeData.map((item, i) => (
                               <div key={i} className="flex items-center gap-2">
                                   <div className="w-3 h-3 rounded-full" style={{backgroundColor: PIE_COLORS[i % PIE_COLORS.length]}}></div>
-                                  <span className="text-xs text-gray-600 font-medium">{item.name}</span>
+                                  <span className="text-xs text-gray-600 dark:text-slate-300 font-medium">{item.name}</span>
                               </div>
                           ))}
                       </div>

@@ -4,15 +4,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS design tokens — auto-switch on .dark ── */
+:root {
+  --sidebar-width: 256px;
+
+  --color-bg:        #f9fafb;   /* gray-50  */
+  --color-surface:   #ffffff;   /* white    */
+  --color-surface-2: #f3f4f6;   /* gray-100 */
+  --color-border:    #e5e7eb;   /* gray-200 */
+  --color-border-2:  #f3f4f6;   /* gray-100 */
+  --color-text:      #111827;   /* gray-900 */
+  --color-text-2:    #4b5563;   /* gray-600 */
+  --color-text-3:    #6b7280;   /* gray-500 */
+  --color-text-4:    #9ca3af;   /* gray-400 */
+  --color-hover:     #f9fafb;   /* gray-50  */
+  --color-scrollbar: #9ca3af;
+  --color-scrollbar-track: #f3f4f6;
+}
+
+.dark {
+  --color-bg:        #0f172a;   /* slate-900 */
+  --color-surface:   #1e293b;   /* slate-800 */
+  --color-surface-2: #334155;   /* slate-700 */
+  --color-border:    #334155;   /* slate-700 */
+  --color-border-2:  #475569;   /* slate-600 */
+  --color-text:      #f1f5f9;   /* slate-100 */
+  --color-text-2:    #cbd5e1;   /* slate-300 */
+  --color-text-3:    #94a3b8;   /* slate-400 */
+  --color-text-4:    #64748b;   /* slate-500 */
+  --color-hover:     #334155;   /* slate-700 */
+  --color-scrollbar: #475569;
+  --color-scrollbar-track: #1e293b;
+}
+
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 font-sans;
+    background-color: var(--color-bg);
+    color: var(--color-text);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    /* Prevent horizontal scroll on mobile */
-    overflow-x: hidden;
+    /* clip prevents page-level horizontal scroll without blocking inner div scroll */
+    overflow-x: clip;
+    transition: background-color 0.2s, color 0.2s;
   }
 
-  /* Better mobile tap targets */
   * {
     -webkit-tap-highlight-color: rgba(99, 102, 241, 0.1);
   }
@@ -20,7 +54,7 @@
 
 @layer components {
 
-  /* Mobile-optimized buttons with minimum touch target of 44px */
+  /* ── Buttons ── */
   .btn {
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
     min-height: 44px;
@@ -31,11 +65,16 @@
   }
 
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500;
+    background-color: var(--color-surface-2);
+    color: var(--color-text);
+    @apply focus:ring-gray-500;
+  }
+  .btn-secondary:hover {
+    background-color: var(--color-border);
   }
 
   .btn-danger {
@@ -46,7 +85,6 @@
     @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
   }
 
-  /* Loading button state */
   .btn-loading {
     @apply relative pointer-events-none opacity-80;
   }
@@ -66,126 +104,93 @@
     animation: btn-spin 0.6s linear infinite;
   }
 
-  .btn-loading>* {
-    visibility: hidden;
-  }
+  .btn-loading > * { visibility: hidden; }
 
-  @keyframes btn-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
+  @keyframes btn-spin { to { transform: rotate(360deg); } }
 
-  /* Mobile-optimized inputs */
+  /* ── Inputs ── */
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+    @apply w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all;
     min-height: 44px;
     font-size: 16px;
-    /* Prevents zoom on iOS */
   }
 
-  /* Mobile-optimized cards */
+  .input::placeholder { color: var(--color-text-4); }
+
+  /* ── Cards ── */
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6;
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    @apply rounded-xl shadow-sm border p-4 sm:p-6;
   }
 
+  /* ── Badges ── */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
-  .badge-success {
-    @apply bg-green-100 text-green-800;
-  }
+  .badge-success { @apply bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300; }
+  .badge-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300; }
+  .badge-danger  { @apply bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300; }
+  .badge-info    { @apply bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300; }
+  .badge-primary { @apply bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300; }
 
-  .badge-warning {
-    @apply bg-yellow-100 text-yellow-800;
-  }
-
-  .badge-danger {
-    @apply bg-red-100 text-red-800;
-  }
-
-  .badge-info {
-    @apply bg-blue-100 text-blue-800;
-  }
-
-  .badge-primary {
-    @apply bg-indigo-100 text-indigo-800;
-  }
-
-  /* Mobile-responsive table container */
+  /* ── Table ── */
   .table-container {
-    @apply overflow-x-auto rounded-lg border border-gray-200;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
     -webkit-overflow-scrolling: touch;
   }
 
+  .table-container,
+  .overflow-x-auto,
+  [style*="overflow-x: scroll"] {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track);
+  }
+
   .table {
-    @apply min-w-full divide-y divide-gray-200;
+    @apply divide-y;
+    divide-color: var(--color-border);
+    border-color: var(--color-border);
   }
 
   .table thead {
-    @apply bg-gray-50;
+    background-color: var(--color-surface-2);
   }
 
   .table th {
-    @apply px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    color: var(--color-text-3);
+    @apply px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider;
     white-space: nowrap;
   }
 
   .table td {
-    @apply px-3 sm:px-6 py-4 text-sm text-gray-900;
+    color: var(--color-text);
+    @apply px-3 sm:px-6 py-4 text-sm;
   }
 
   .table tbody tr {
-    @apply hover:bg-gray-50 transition-colors;
+    @apply transition-colors;
+    border-color: var(--color-border);
+  }
+  .table tbody tr:hover {
+    background-color: var(--color-hover);
   }
 
-  /* Mobile card view for tables */
-  @media (max-width: 768px) {
-    .table-mobile-card {
-      @apply block;
-    }
-
-    .table-mobile-card thead {
-      @apply hidden;
-    }
-
-    .table-mobile-card tbody {
-      @apply block;
-    }
-
-    .table-mobile-card tr {
-      @apply block mb-4 border border-gray-200 rounded-lg p-4 bg-white;
-    }
-
-    .table-mobile-card td {
-      @apply block text-right px-0 py-2 border-b border-gray-100 last:border-0;
-      position: relative;
-      padding-left: 50%;
-    }
-
-    .table-mobile-card td::before {
-      content: attr(data-label);
-      position: absolute;
-      left: 0;
-      width: 45%;
-      padding-right: 10px;
-      white-space: nowrap;
-      font-weight: 600;
-      text-align: left;
-      color: #6b7280;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-    }
-  }
-
-  /* Mobile-optimized stat cards */
+  /* ── Stat cards ── */
   .stat-card {
-    @apply bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200;
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    @apply rounded-xl p-4 sm:p-6 shadow-sm border;
     min-height: 120px;
   }
 
-  /* Touch-friendly icon buttons */
+  /* ── Icon buttons ── */
   .icon-btn {
     @apply p-2 rounded-lg transition-colors;
     min-width: 44px;
@@ -195,13 +200,14 @@
     justify-content: center;
   }
 
-  /* Mobile-optimized modal */
+  /* ── Modal ── */
   .modal-mobile {
     @apply fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4;
   }
 
   .modal-content-mobile {
-    @apply bg-white rounded-t-2xl sm:rounded-xl w-full max-h-[90vh] overflow-y-auto;
+    background-color: var(--color-surface);
+    @apply rounded-t-2xl sm:rounded-xl w-full max-h-[90vh] overflow-y-auto;
     max-width: 100%;
   }
 
@@ -211,163 +217,77 @@
       max-height: 85vh;
     }
   }
+
+  /* ── Skeleton ── */
+  .skeleton       { background-color: var(--color-surface-2); @apply rounded animate-pulse; }
+  .skeleton-text  { background-color: var(--color-surface-2); @apply rounded animate-pulse h-4; }
+  .skeleton-card  { background-color: var(--color-surface);   @apply rounded-xl border p-6 animate-pulse; border-color: var(--color-border); }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+/* ── Webkit scrollbar ── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--color-scrollbar); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-3); }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Loading spinner */
+/* ── Spinners ── */
 .spinner {
-  border: 3px solid #f3f3f3;
+  border: 3px solid var(--color-surface-2);
   border-top: 3px solid #3b82f6;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 40px; height: 40px;
   animation: spin 1s linear infinite;
 }
 
-/* Alias used in some pages */
 .loading {
-  border: 3px solid #e5e7eb;
+  border: 3px solid var(--color-border);
   border-top: 3px solid #6366f1;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
-/* Skeleton loader */
-.skeleton {
-  @apply bg-gray-200 rounded animate-pulse;
-}
-
-.skeleton-text {
-  @apply bg-gray-200 rounded animate-pulse h-4;
-}
-
-.skeleton-card {
-  @apply bg-white rounded-xl border border-gray-200 p-6 animate-pulse;
-}
-
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Mobile-specific utilities */
+/* ── Mobile utilities ── */
 @media (max-width: 640px) {
-
-  /* Reduce padding on mobile */
-  .mobile-compact {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  /* Stack buttons vertically on mobile */
-  .mobile-stack {
-    flex-direction: column !important;
-  }
-
-  .mobile-stack>* {
-    width: 100% !important;
-  }
-
-  /* Hide on mobile */
-  .hide-mobile {
-    display: none !important;
-  }
-
-  /* Full width on mobile */
-  .mobile-full {
-    width: 100% !important;
-  }
+  .mobile-compact { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .mobile-stack   { flex-direction: column !important; }
+  .mobile-stack > * { width: 100% !important; }
+  .hide-mobile    { display: none !important; }
+  .mobile-full    { width: 100% !important; }
 }
 
-/* Tablet and above */
 @media (min-width: 641px) {
-  .hide-desktop {
-    display: none !important;
-  }
+  .hide-desktop { display: none !important; }
 }
 
-/* Safe area insets for PWA */
+/* ── Safe area ── */
 @supports (padding: max(0px)) {
   body {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
-
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+  .safe-top    { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-/* Smooth focus ring for all inputs */
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: none;
-}
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
 
-/* Better button hover state */
-.btn:not(:disabled):hover {
-  filter: brightness(1.04);
-}
+.btn:not(:disabled):hover { filter: brightness(1.04); }
 
-/* Improved card hover */
-.card-hover {
-  @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
-}
+.card-hover { @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5; }
 
-/* Slide-up animation for mobile modals */
 @keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
+.animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
 
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out forwards;
-}
-
-/* Fade-in animation */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-
-.animate-fade-in {
-  animation: fadeIn 0.2s ease-out forwards;
-}
+.animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
